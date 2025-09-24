@@ -1,0 +1,444 @@
+.book-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 0;
+  background: transparent; /* <-- changed from rgba(255,255,255,0.95) */
+}
+
+/* Main Rectangle */
+.book-container {
+  width: 70%;
+  min-height: 90vh;
+  border-radius: 20px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to bottom, #ffffff, #7ec8a1 50%, #0f5132);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden; /* prevents unwanted scroll inside */
+}
+
+/* Header */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 25px;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.pincode-dropdown-container {
+  position: relative;
+  width: 200px;
+}
+
+.pincode-input {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 2px solid #0f5132;
+  font-size: 1rem;
+  outline: none;
+  color: #0f5132;
+  font-weight: 500;
+  width: 100%;
+}
+
+.pincode-input::placeholder {
+  color: #7ec8a1;
+}
+
+.pincode-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #0f5132;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.pincode-suggestion-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s;
+}
+
+.pincode-suggestion-item:hover {
+  background-color: #f0f8f4;
+}
+
+.pincode-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-pincode {
+  font-weight: 600;
+  color: #0f5132;
+}
+
+.suggestion-area {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #0f5132;
+  margin: 0;
+}
+
+.title-underline {
+  width: 80%; /* Extended to 80% of container width */
+  height: 4px;
+  background-color: #0f5132;
+  margin-top: 8px;
+  border-radius: 2px;
+}
+
+.state-dropdown {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 2px solid #0f5132;
+  font-size: 1rem;
+  outline: none;
+  color: #0f5132;
+  font-weight: 500;
+}
+
+
+
+/* Healthcare Type Buttons */
+.healthcare-types-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 40px;
+  padding: 20px;
+  margin-top: 10px;
+}
+
+.healthcare-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 10px;
+}
+
+.healthcare-type-btn:hover {
+  transform: translateY(-5px);
+}
+
+.healthcare-type-btn.selected {
+  transform: translateY(-8px);
+}
+
+.type-image-container {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: transparent;
+  border-radius: 50%;
+  box-shadow: 0 8px 20px rgba(15, 81, 50, 0.3);
+  transition: all 0.3s ease;
+}
+
+.healthcare-type-btn:hover .type-image-container {
+  box-shadow: 0 12px 30px rgba(15, 81, 50, 0.4);
+  transform: scale(1.05);
+}
+
+.healthcare-type-btn.selected .type-image-container {
+  box-shadow: 0 15px 35px rgba(15, 81, 50, 0.5);
+  transform: scale(1.08);
+}
+
+.type-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+}
+
+.fallback-icon {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid #0f5132;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #0f5132;
+  box-shadow: 0 8px 20px rgba(15, 81, 50, 0.3);
+}
+
+.healthcare-type-btn:hover .fallback-icon {
+  box-shadow: 0 12px 30px rgba(15, 81, 50, 0.4);
+  transform: scale(1.05);
+}
+
+.healthcare-type-btn.selected .fallback-icon {
+  background: #0f5132;
+  border-color: #0f5132;
+  color: white;
+  box-shadow: 0 15px 35px rgba(15, 81, 50, 0.5);
+  transform: scale(1.08);
+}
+
+.type-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  color: #0f5132;
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.healthcare-type-btn:hover .type-label {
+  transform: scale(1.05);
+  color: #0d4029;
+}
+
+.healthcare-type-btn.selected .type-label {
+  transform: scale(1.08);
+  color: #0d4029;
+  font-weight: 700;
+}
+
+/* Content Layout */
+.content-area {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex: 1;
+}
+
+/* Results Section */
+.results-section {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 20px;
+  border-radius: 12px;
+  overflow-y: auto;
+  max-height: 500px; /* Added max height for scrolling */
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e3e3e3;
+  border-top: 4px solid #0f5132;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.facilities-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.facility-tab {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.facility-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.facility-info {
+  flex: 1;
+}
+
+.facility-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.2rem;
+  color: #0f5132;
+}
+
+.facility-info p {
+  margin: 3px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.facility-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 15px;
+}
+
+.facility-actions button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-weight: 500;
+  min-width: 120px;
+}
+
+.book-appointment-btn {
+  background: #0f5132;
+  color: white;
+}
+
+.book-appointment-btn:hover {
+  background: #0d4029;
+}
+
+.call-btn {
+  background: #ffc107;
+  color: #000;
+}
+
+.call-btn:hover {
+  background: #e0a800;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.initial-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+/* Right Panel */
+.action-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 2px solid #0f5132;
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: #0f5132;
+  color: white;
+}
+
+/* Floating Action Panel */
+.floating-action-panel {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000; /* Ensure it stays on top */
+}
+
+.floating-action-panel .action-btn {
+  background: white;
+  border: 2px solid #0f5132;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.floating-action-panel .action-btn:hover {
+  background: #0f5132;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .book-container {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  .healthcare-types-container {
+    gap: 10px;
+  }
+  
+  .healthcare-type-btn {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .floating-action-panel {
+    right: 15px;
+    bottom: 15px;
+  }
+}
