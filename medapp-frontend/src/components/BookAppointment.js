@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./BookAppointment.css";
 
 const BookAppointment = () => {
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState("");
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -101,10 +103,9 @@ const BookAppointment = () => {
     }
   };
 
-  const handleBookAppointment = (facility) => {
-    alert(`Booking appointment at ${facility.name}`);
-  };
-
+const handleBookAppointment = (facility) => {
+  navigate('/facility-details', { state: { facility } });
+}; 
   const handleCall = (facility) => {
     if (facility.phone) {
       window.open(`tel:${facility.phone}`, "_self");

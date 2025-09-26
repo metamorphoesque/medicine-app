@@ -1,109 +1,134 @@
+// pages/MedicinePage.js
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import ApiService from '../services/ApiService';
 import './MedicinePage.css';
+import { categoryGroups } from "../services/categoryGroups";
 
 const MedicinePage = () => {
-  const { categoryName } = useParams();
+  const { categoryName } = useParams(); // ✅ matches App.js route param
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+
   const [medicines, setMedicines] = useState([]);
-  const [filteredMedicines, setFilteredMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-    manufacturer: '',
-    priceRange: [0, 500],
-    rating: 0,
-  });
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const fetchMedicines = async (page = 1) => {
+  // Category name mapping for display
+  const categoryDisplayNames = {
+    'heart-blood-pressure-care': 'Heart & Blood Pressure Care',
+    'diabetes-care': 'Diabetes Care',
+    'respiratory-care': 'Respiratory Care',
+    'mental-neurological-care': 'Mental & Neurological Care',
+    'digestive-care': 'Digestive Care',
+    'allergy-care': 'Allergy Care',
+    'dental-care': 'Dental Care',
+    'eye-care': 'Eye Care',
+    'ear-care': 'Ear Care',
+    'dermal-care': 'Skin & Dermatology Care',
+    'baby-care': 'Baby Care'
+  };
+
+  const fetchMedicines = async (page = 1, search = '', categorySlug = '') => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/medicines/category/${encodeURIComponent(categoryName)}?page=${page}&limit=20&sortBy=rating`
-      );
-
-      setMedicines(response.data.medicines);
-      setFilteredMedicines(response.data.medicines);
-      setPagination(response.data.pagination);
       setError(null);
+
+      console.log('Fetching medicines with params:', { page, search, category: categorySlug });
+
+      // Get the medicine subcategories for this category
+      const subcategories = categoryGroups[categorySlug] || [];
+      
+      const response = await ApiService.getMedicines({
+        page,
+        limit: 20,
+        search: search.trim(),
+        category: categorySlug,
+        subcategories: subcategories // Pass subcategories to the API
+      });
+
+      console.log('Medicine API Response:', response);
+
+      if (response && response.medicines) {
+        setMedicines(response.medicines);
+        
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages);
+          setTotalItems(response.pagination.totalItems);
+        } else {
+          setTotalPages(Math.ceil(response.medicines.length / 20));
+          setTotalItems(response.medicines.length);
+        }
+      } else {
+        setMedicines([]);
+        setTotalPages(0);
+        setTotalItems(0);
+      }
     } catch (err) {
       console.error('Error fetching medicines:', err);
-      setError(err.response?.data?.error || 'Failed to fetch medicines');
+      setError(`Failed to fetch medicines: ${err.message}`);
+      setMedicines([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Main effect to fetch medicines when component mounts or parameters change
   useEffect(() => {
+    const currentSearch = searchParams.get('search') || '';
+    const currentPageFromUrl = parseInt(searchParams.get('page')) || 1;
+    
+    setSearchTerm(currentSearch);
+    setCurrentPage(currentPageFromUrl);
+    
     if (categoryName) {
-      fetchMedicines(1);
-      setCurrentPage(1);
+      fetchMedicines(currentPageFromUrl, currentSearch, categoryName); // ✅ use categoryName
     }
-  }, [categoryName]);
+  }, [categoryName, searchParams]);
 
-  // Search + filter effect
-  useEffect(() => {
-    let results = medicines;
-
-    if (searchTerm.trim() !== '') {
-      results = results.filter(medicine =>
-        medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (medicine.generic && medicine.generic.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (medicine.manufacturer_name && medicine.manufacturer_name.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-
-    // Manufacturer filter
-    if (filters.manufacturer.trim() !== '') {
-      results = results.filter(m =>
-        m.manufacturer_name &&
-        m.manufacturer_name.toLowerCase().includes(filters.manufacturer.toLowerCase())
-      );
-    }
-
-    // Price filter
-    results = results.filter(m => {
-      if (!m.price) return true;
-      return m.price >= filters.priceRange[0] && m.price <= filters.priceRange[1];
-    });
-
-    // Rating filter (if available in your db)
-    if (filters.rating > 0) {
-      results = results.filter(m => (m.rating || 0) >= filters.rating);
-    }
-
-    setFilteredMedicines(results);
-  }, [searchTerm, filters, medicines]);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    fetchMedicines(page);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const newParams = new URLSearchParams();
+    if (searchTerm.trim()) newParams.set('search', searchTerm.trim());
+    newParams.set('page', '1');
+    setSearchParams(newParams);
   };
 
-  const handleViewDetails = (medicineId) => {
-    navigate(`/medicine/${medicineId}`);
-    console.log('View details for medicine:', medicineId);
-  };
-
-  const handleAddToCart = (medicineId) => {
-    console.log('Add to cart:', medicineId);
-  };
-
-  // Generate a color based on medicine name for consistent placeholder colors
-  const getPlaceholderColor = (name) => {
-    const colors = [
-      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
-    ];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('page', newPage.toString());
+      setSearchParams(newParams);
     }
-    return colors[Math.abs(hash) % colors.length];
+  };
+
+  const handleMedicineClick = (medicineId) => {
+    navigate(`/medicines/${medicineId}`); // ✅ plural
+  };
+
+  const handleViewDetails = (medicineId, e) => {
+    e.stopPropagation();
+    navigate(`/medicines/${medicineId}`); // ✅ plural
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    const newParams = new URLSearchParams();
+    newParams.set('page', '1');
+    setSearchParams(newParams);
+  };
+
+  const getCategoryDisplayName = () => {
+    return categoryDisplayNames[categoryName] || 'All Medicines'; // ✅ use categoryName
+  };
+
+  const getRandomColor = () => {
+    const colors = ['#0b6835', '#e74c3c', '#3498db', '#9b59b6', '#f39c12', '#1abc9c', '#34495e'];
+    return colors[Math.floor(Math.random() * colors.length)];
   };
 
   if (loading) {
@@ -111,264 +136,287 @@ const MedicinePage = () => {
       <div className="medicine-page">
         <div className="loading-spinner">
           <div className="spinner"></div>
-          Loading medicines...
+          <p>Loading medicines...</p>
         </div>
       </div>
     );
   }
-
-  if (error) {
-    return (
-      <div className="medicine-page">
-        <div className="error">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button onClick={() => fetchMedicines(currentPage)}>Retry</button>
-        </div>
-      </div>
-    );
-  }
-
-  const renderPagination = () => {
-    if (!pagination.totalPages || pagination.totalPages <= 1) return null;
-
-    const pages = [];
-    const totalPages = pagination.totalPages;
-    const current = pagination.currentPage;
-
-    pages.push(
-      <button
-        key="prev"
-        className="pagination-btn"
-        disabled={current === 1}
-        onClick={() => handlePageChange(current - 1)}
-      >
-        Previous
-      </button>
-    );
-
-    const startPage = Math.max(1, current - 2);
-    const endPage = Math.min(totalPages, startPage + 4);
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(
-        <button
-          key={i}
-          className={`pagination-btn ${i === current ? 'active' : ''}`}
-          onClick={() => handlePageChange(i)}
-        >
-          {i}
-        </button>
-      );
-    }
-
-    pages.push(
-      <button
-        key="next"
-        className="pagination-btn"
-        disabled={current === totalPages}
-        onClick={() => handlePageChange(current + 1)}
-      >
-        Next
-      </button>
-    );
-
-    return pages;
-  };
 
   return (
     <div className="medicine-page">
+      {/* Page Header */}
       <div className="page-header">
-        <h1 className="page-title">{decodeURIComponent(categoryName)}</h1>
+        <div className="breadcrumb">
+          <span onClick={() => navigate('/')} className="breadcrumb-link">Home</span>
+          <span className="breadcrumb-separator"> / </span>
+          <span className="breadcrumb-current">{getCategoryDisplayName()}</span>
+        </div>
+        
+        <h1 className="page-title">{getCategoryDisplayName()}</h1>
+        
+        {totalItems > 0 && (
+          <p className="page-subtitle">Found {totalItems} medicine{totalItems !== 1 ? 's' : ''}</p>
+        )}
       </div>
 
+      {/* Medicine Layout */}
       <div className="medicine-layout">
-        {/* Left: Medicines */}
+        {/* Main Content */}
         <div className="medicine-content">
+          {/* Search Section */}
           <div className="search-filter-section">
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search medicines by name, generic, or manufacturer..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <form onSubmit={handleSearch} className="search-form">
+              <div className="search-input-container">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search medicines..."
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button 
+                    type="button" 
+                    onClick={clearSearch}
+                    className="clear-search-btn"
+                    aria-label="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              <button type="submit" className="search-btn">
+                Search
+              </button>
+            </form>
           </div>
 
-          {filteredMedicines.length === 0 ? (
+          {/* Error State */}
+          {error && (
+            <div className="error">
+              <h2>Error Loading Medicines</h2>
+              <p>{error}</p>
+              <button onClick={() => fetchMedicines(currentPage, searchTerm, categoryName)}>
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!error && medicines.length === 0 && !loading && (
             <div className="empty-state">
               <div className="empty-state-icon">💊</div>
               <h2>No medicines found</h2>
               <p>
-                {searchTerm
-                  ? `No medicines match your search "${searchTerm}"`
-                  : "No medicines available in this category"}
+                {searchTerm 
+                  ? `No medicines match "${searchTerm}" in ${getCategoryDisplayName()}`
+                  : `No medicines available in ${getCategoryDisplayName()}`
+                }
               </p>
+              {searchTerm && (
+                <button onClick={clearSearch} className="clear-search-btn-large">
+                  Clear Search
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="medicine-grid">
-              {filteredMedicines.map((medicine) => (
-                <div key={medicine.id} className="medicine-card">
-                  {medicine.category_name && (
-                    <div className="medicine-category">{medicine.category_name}</div>
-                  )}
+          )}
 
-                  {/* Updated image section - no more image_url dependency */}
-                  <div className="medicine-img-container">
-                    <div 
-                      className="medicine-img-placeholder"
-                      style={{ 
-                        backgroundColor: getPlaceholderColor(medicine.name),
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '2rem',
-                        fontWeight: 'bold',
-                        borderRadius: '8px',
-                        minHeight: '120px'
-                      }}
-                    >
-                      {medicine.name.charAt(0).toUpperCase()}
-                    </div>
-                  </div>
-
-                  <div className="medicine-info">
-                    <h3 className="medicine-name">{medicine.name}</h3>
-                  
-                    {medicine.manufacturer_name && (
-                      <p className="medicine-manufacturer">
-                        By: {medicine.manufacturer_name}
-                      </p>
-                    )}
-                    {medicine.price && (
-                      <p className="medicine-price-display">
-                        ${parseFloat(medicine.price).toFixed(2)}
-                      </p>
-                    )}
-                    {medicine.doctor_rating && (
-                      <div className="medicine-rating">
-                        <span className="rating-stars">
-                          {'★'.repeat(medicine.doctor_rating)}{'☆'.repeat(5 - medicine.doctor_rating)}
-                        </span>
-                        <span className="rating-text">({medicine.doctor_rating}/5)</span>
+          {/* Medicine Grid */}
+          {medicines.length > 0 && (
+            <>
+              <div className="medicine-grid">
+                {medicines.map((medicine) => (
+                  <div 
+                    key={medicine.id} 
+                    className="medicine-card"
+                    onClick={() => handleMedicineClick(medicine.id)}
+                  >
+                    {/* Category Badge */}
+                    {medicine.category_name && (
+                      <div className="medicine-category">
+                        {medicine.category_name}
                       </div>
                     )}
 
+                    {/* Medicine Image */}
+                    <div className="medicine-img-container">
+                      {medicine.image_url ? (
+                        <img 
+                          src={medicine.image_url} 
+                          alt={medicine.name}
+                          className="medicine-img"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="medicine-img-placeholder" 
+                        style={{ 
+                          display: medicine.image_url ? 'none' : 'flex',
+                          backgroundColor: getRandomColor()
+                        }}
+                      >
+                        {medicine.name.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                    
+                    {/* Medicine Info */}
+                    <div className="medicine-info">
+                      <h3 className="medicine-name">{medicine.name}</h3>
+                      
+                      {medicine.generic && medicine.generic !== medicine.name && (
+                        <p className="medicine-generic">Generic: {medicine.generic}</p>
+                      )}
+                      
+                      {medicine.manufacturer_name && medicine.manufacturer_name !== 'Unknown' && (
+                        <p className="medicine-manufacturer">By {medicine.manufacturer_name}</p>
+                      )}
+                      
+                      {medicine.composition && (
+                        <p className="medicine-composition">
+                          <strong>Composition:</strong> {medicine.composition.length > 50 
+                            ? `${medicine.composition.substring(0, 50)}...` 
+                            : medicine.composition
+                          }
+                        </p>
+                      )}
+                      
+                      {medicine.description && (
+                        <p className="medicine-description">
+                          {medicine.description.length > 80 
+                            ? `${medicine.description.substring(0, 80)}...` 
+                            : medicine.description
+                          }
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
                     <div className="medicine-actions">
-                      <button
+                      <button 
                         className="action-btn view-btn"
-                        onClick={() => handleViewDetails(medicine.id)}
+                        onClick={(e) => handleViewDetails(medicine.id, e)}
                       >
                         View Details
                       </button>
-                      <button
+                      <button 
                         className="action-btn add-cart-btn"
-                        onClick={() => handleAddToCart(medicine.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add to cart functionality
+                          console.log('Add to cart:', medicine.name);
+                        }}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                          style={{ marginRight: '6px' }}
-                        >
-                          <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 
-                          2 2 2-.9 2-2-.9-2-2-2zM1 
-                          2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 
-                          0 1.1.9 2 2 2h12v-2H7.42c-.14 
-                          0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 
-                          0 1.41-.41 1.75-1.03L21.7 
-                          4H5.21l-.94-2H1zm16 16c-1.1 
-                          0-2 .9-2 2s.9 2 2 2 2-.9 
-                          2-2-.9-2-2-2z" />
-                        </svg>
                         Add to Cart
                       </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
 
-          {pagination.totalPages > 1 && !searchTerm && (
-            <div className="pagination">{renderPagination()}</div>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="pagination-btn"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="pagination-info">
+                    <span>Page {currentPage} of {totalPages}</span>
+                  </div>
+                  
+                  <div className="pagination-pages">
+                    {[...Array(Math.min(5, totalPages))].map((_, index) => {
+                      const pageNum = Math.max(1, currentPage - 2) + index;
+                      if (pageNum <= totalPages) {
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`pagination-btn ${pageNum === currentPage ? 'active' : ''}`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                  
+                  <button 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="pagination-btn"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* Right: Filter panel */}
-        <div className="filter-panel">
-          <h3>Filter</h3>
+        {/* Filter Sidebar */}
+        <div className="filter-sidebar">
+          <div className="filter-panel">
+            <h3>Filter Medicines</h3>
+            
+            <div className="filter-group">
+              <label>Price Range</label>
+              <select>
+                <option>All Prices</option>
+                <option>Under $10</option>
+                <option>$10 - $50</option>
+                <option>$50 - $100</option>
+                <option>Over $100</option>
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Manufacturer</label>
-            <input
-              type="text"
-              placeholder="Enter manufacturer"
-              value={filters.manufacturer}
-              onChange={(e) =>
-                setFilters({ ...filters, manufacturer: e.target.value })
-              }
-            />
-          </div>
+            <div className="filter-group">
+              <label>Manufacturer</label>
+              <select>
+                <option>All Manufacturers</option>
+                <option>Brand A</option>
+                <option>Brand B</option>
+                <option>Brand C</option>
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Price Range</label>
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.priceRange[0]}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  priceRange: [Number(e.target.value), filters.priceRange[1]],
-                })
-              }
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.priceRange[1]}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  priceRange: [filters.priceRange[0], Number(e.target.value)],
-                })
-              }
-            />
-          </div>
+            <div className="filter-group">
+              <label>Rating</label>
+              <select>
+                <option>All Ratings</option>
+                <option>4+ Stars</option>
+                <option>3+ Stars</option>
+                <option>2+ Stars</option>
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Minimum Rating</label>
-            <select
-              value={filters.rating}
-              onChange={(e) =>
-                setFilters({ ...filters, rating: Number(e.target.value) })
-              }
-            >
-              <option value={0}>All</option>
-              <option value={1}>1★ & up</option>
-              <option value={2}>2★ & up</option>
-              <option value={3}>3★ & up</option>
-              <option value={4}>4★ & up</option>
-              <option value={5}>5★ only</option>
-            </select>
+            <div className="filter-group">
+              <label>Availability</label>
+              <select>
+                <option>All</option>
+                <option>In Stock</option>
+                <option>Out of Stock</option>
+              </select>
+            </div>
+
+            <button className="apply-filters-btn">Apply Filters</button>
+            <button className="clear-filters-btn">Clear All</button>
           </div>
         </div>
       </div>
 
       {/* Floating Action Buttons */}
       <div className="floating-buttons">
-        <button className="fab wishlist-fab" onClick={() => navigate('/wishlist')}>
-          ❤
-        </button>
-        <button className="fab cart-fab" onClick={() => navigate('/cart')}>
-          🛒
-        </button>
-        <button className="fab reminders-fab" onClick={() => navigate('/reminders')}>
-          ⏰
+        <button className="fab" onClick={() => window.scrollTo(0, 0)} title="Back to top">
+          ↑
         </button>
       </div>
     </div>

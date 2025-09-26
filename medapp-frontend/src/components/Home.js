@@ -71,8 +71,8 @@ const Home = () => {
   }, []);
 
   const handleCategoryClick = (category) => {
-    setActiveCategory(category.id === activeCategory ? null : category.id);
-    navigate(`/medicines/category/${encodeURIComponent(category.slug)}`);
+    setActiveCategory(category.id);
+    navigate(`/medicines/category/${category.slug}`);
   };
 
   const handleImageError = (e) => {
@@ -105,11 +105,10 @@ const Home = () => {
     try {
       setLoadingHealthcare(true);
       const response = await fetch(
-        `http://localhost:5000/healthcare/nearby?lat=${location.lat}&lng=${location.lng}&type=${type}&radius=50`
+        `http://localhost:5000/api/healthcare/nearby?lat=${location.lat}&lng=${location.lng}&type=${type}&radius=50`
       );
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      // Limit to 4 results
       setHealthcareResults(data.slice(0, 4) || []);
       setShowHealthcareResults(true);
     } catch (error) {
@@ -124,18 +123,14 @@ const Home = () => {
   const searchHealthcareByState = async (state, type) => {
     try {
       setLoadingHealthcare(true);
-      
-      const url = `http://localhost:5000/healthcare/byState?state=${encodeURIComponent(state)}&type=${type}&limit=4`;
+      const url = `http://localhost:5000/api/healthcare/byState?state=${encodeURIComponent(state)}&type=${type}&limit=4`;
       const response = await fetch(url);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
       const data = await response.json();
-      // Results are already limited to 4 by the server
       setHealthcareResults(data.results || []);
       setShowHealthcareResults(true);
     } catch (error) {
@@ -161,29 +156,21 @@ const Home = () => {
     }
   };
 
-  const handleLocationDropdownClick = () => {
-    setShowLocationDropdown(!showLocationDropdown);
-  };
+  const handleLocationDropdownClick = () => setShowLocationDropdown(!showLocationDropdown);
 
   const handleLocationSelect = (location) => {
     setShowLocationDropdown(false);
     setSelectedLocation(location.name);
 
-    if (location.id === "current") {
-      getCurrentLocation();
-    } else if (selectedHealthcareType) {
-      searchHealthcareByState(location.state, selectedHealthcareType);
-    }
+    if (location.id === "current") getCurrentLocation();
+    else if (selectedHealthcareType) searchHealthcareByState(location.state, selectedHealthcareType);
   };
 
-  const handleBookAppointment = (facility) => {
-    console.log("Booking appointment for:", facility.name);
-    // Navigate to BookAppointment page with facility data
-    navigate('/book-appointment', { state: { facility } });
-  };
+const handleBookAppointment = (facility) => {
+  navigate('/facility-details', { state: { facility } });
+};
 
   const handleSeeMore = () => {
-    // Navigate to BookAppointment page with all results
     navigate('/book-appointment', { 
       state: { 
         searchParams: { 
@@ -197,13 +184,12 @@ const Home = () => {
 
   const handleBannerScroll = (direction) => {
     const scrollAmount = direction === 'left' ? -300 : 300;
-    if (bannerScrollRef.current) {
-      bannerScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
+    if (bannerScrollRef.current) bannerScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
 
   return (
     <div className="home-page">
+      {/* Banners */}
       <div className="banners-container">
         <span className="banner-arrow left" onClick={() => handleBannerScroll('left')}>‹</span>
         <div className="banners-scroll" ref={bannerScrollRef}>
@@ -219,6 +205,7 @@ const Home = () => {
         <span className="banner-arrow right" onClick={() => handleBannerScroll('right')}>›</span>
       </div>
 
+      {/* Location */}
       <div className="location-container" ref={locationRef}>
         <div className={`location-filter ${showLocationDropdown ? 'open' : ''}`} onClick={handleLocationDropdownClick}>
           <svg className="location-icon" viewBox="0 0 24 24" fill="#0b6835">
@@ -245,10 +232,10 @@ const Home = () => {
         )}
       </div>
 
-      {/* Categories Section */}
+      {/* Categories */}
       <div className="section-container">
         <div className="section-header">
-          <h2 className="section-title">S E A R C H   B Y   C A T E G O R I E S</h2>
+          <h2 className="section-title">Search By Category</h2>
           <div className="section-underline"></div>
         </div>
         <div className="section-content">
@@ -281,7 +268,7 @@ const Home = () => {
       {/* Healthcare Section */}
       <div className="section-container">
         <div className="section-header">
-          <h2 className="section-title">A V A I L A B L E   H E A L T H C A R E   N E A R B Y</h2>
+          <h2 className="section-title">Search Available Healthcare Nearby</h2>
           <div className="section-underline"></div>
         </div>
         <div className="section-content">
@@ -312,6 +299,7 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Healthcare Results */}
       {showHealthcareResults && (
         <div className="healthcare-results">
           {loadingHealthcare ? (

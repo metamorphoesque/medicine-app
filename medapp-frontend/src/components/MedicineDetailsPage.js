@@ -1,3 +1,4 @@
+// pages/MedicineDetailsPage.js
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './MedicineDetailsPage.css';
@@ -15,7 +16,7 @@ const MedicineDetailsPage = () => {
   const fetchMedicineDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/medicines/${medicineId}/details`);
+      const response = await fetch(`http://localhost:5000/api/medicines/${medicineId}`);
       
       if (!response.ok) {
         throw new Error('Medicine not found');
@@ -63,13 +64,13 @@ const MedicineDetailsPage = () => {
   // Handle add to cart
   const handleAddToCart = () => {
     console.log('Adding to cart:', medicine.id);
-    // Add your cart logic here
+    // TODO: Add to cart logic
   };
 
   // Handle add to wishlist
   const handleAddToWishlist = () => {
     console.log('Adding to wishlist:', medicine.id);
-    // Add your wishlist logic here
+    // TODO: Add to wishlist logic
   };
 
   // Slideshow navigation
@@ -87,7 +88,7 @@ const MedicineDetailsPage = () => {
 
   // Navigate to similar medicine details
   const handleSimilarMedicineClick = (id) => {
-    navigate(`/medicine/${id}`);
+    navigate(`/medicines/${id}`); // ✅ plural route
   };
 
   if (loading) {
@@ -194,74 +195,72 @@ const MedicineDetailsPage = () => {
             </div>
 
             {/* Center: Medicine Image and Name */}
-              
-             <div className="medicine-center">
-                <div className="medicine-image">
+            <div className="medicine-center">
+              <div className="medicine-image">
                 {medicine.image_url ? (
-                <img 
-                src={medicine.image_url} 
-                alt={medicine.name}
-                className="medicine-img"
-                        />
-                        ) : (
-                        <div 
-                            className="medicine-placeholder"
-                            style={{ backgroundColor: getPlaceholderColor(medicine.name) }}
-                        >
-                            {medicine.name.charAt(0).toUpperCase()}
-                        </div>
-                        )}
+                  <img 
+                    src={medicine.image_url} 
+                    alt={medicine.name}
+                    className="medicine-img"
+                  />
+                ) : (
+                  <div 
+                    className="medicine-placeholder"
+                    style={{ backgroundColor: getPlaceholderColor(medicine.name) }}
+                  >
+                    {medicine.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              
+              {/* Medicine Name + Details under image */}
+              <div className="medicine-details-below">
+                <h1 className="medicine-name green-label">Name: {medicine.name}</h1>
+
+                {medicine.description && (
+                  <p className="medicine-detail green-label">
+                    Description: <span className="detail-text">{medicine.description}</span>
+                  </p>
+                )}
+
+                {medicine.symptoms && (
+                  <p className="medicine-detail green-label">
+                    Symptoms: <span className="detail-text">{medicine.symptoms}</span>
+                  </p>
+                )}
+
+                {medicine.manufacturer_name && (
+                  <p className="medicine-detail green-label">
+                    Manufacturer: <span className="detail-text">{medicine.manufacturer_name}</span>
+                  </p>
+                )}
+
+                {medicine.composition && (
+                  <p className="medicine-detail green-label">
+                    Composition: <span className="detail-text">{medicine.composition}</span>
+                  </p>
+                )}
+
+                {medicine.doctor_rating && (
+                  <div className="rating-section">
+                    <span className="info-label">Doctor Rating:</span>
+                    <div className="rating-container">
+                      <div className="stars">
+                        {[...Array(5)].map((_, i) => (
+                          <span
+                            key={i}
+                            className={`star ${i < medicine.doctor_rating ? "filled" : ""}`}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <span className="rating-text">({medicine.doctor_rating}/5)</span>
                     </div>
-                    
-                    {/* Medicine Name + Details under image */}
-                    <div className="medicine-details-below">
-                        <h1 className="medicine-name green-label">Name: {medicine.name}</h1>
-
-                        {medicine.description && (
-                        <p className="medicine-detail green-label">
-                            Description: <span className="detail-text">{medicine.description}</span>
-                        </p>
-                        )}
-
-                        {medicine.symptoms && (
-                        <p className="medicine-detail green-label">
-                            Symptoms: <span className="detail-text">{medicine.symptoms}</span>
-                        </p>
-                        )}
-
-                        {medicine.manufacturer_name && (
-                        <p className="medicine-detail green-label">
-                            Manufacturer: <span className="detail-text">{medicine.manufacturer_name}</span>
-                        </p>
-                        )}
-
-                        {medicine.composition && (
-                        <p className="medicine-detail green-label">
-                            Composition: <span className="detail-text">{medicine.composition}</span>
-                        </p>
-                        )}
-
-                        {medicine.doctor_rating && (
-                        <div className="rating-section">
-                            <span className="info-label">Doctor Rating:</span>
-                            <div className="rating-container">
-                            <div className="stars">
-                                {[...Array(5)].map((_, i) => (
-                                <span
-                                    key={i}
-                                    className={`star ${i < medicine.doctor_rating ? "filled" : ""}`}
-                                >
-                                    ★
-                                </span>
-                                ))}
-                            </div>
-                            <span className="rating-text">({medicine.doctor_rating}/5)</span>
-                            </div>
-                        </div>
-                        )}
-                    </div>
-                    </div>
-
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Right: Price and Actions */}
             <div className="medicine-actions">

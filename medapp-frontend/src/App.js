@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./components/Home";
@@ -5,7 +6,8 @@ import BookAppointment from "./components/BookAppointment";
 import LabTests from "./components/LabTests";
 import Profile from "./components/Profile";
 import MedicinePage from "./components/MedicinePage";
-import MedicineDetailsPage from './components/MedicineDetailsPage';
+import MedicineDetailsPage from "./components/MedicineDetailsPage";
+import BookAppointmentDetailsPage from './BookAppointmentDetailsPage';
 import "./App.css";
 
 function App() {
@@ -38,7 +40,7 @@ function App() {
             <button className="clear-search">✕</button>
           </div>
           <button className="auth-btn" onClick={handleAuthClick}>
-            {isLoggedIn ? "LOG OUT" : "LOG IN/OUT"}
+            {isLoggedIn ? "LOG OUT" : "LOG IN"} {/* ✅ clearer */}
           </button>
         </header>
 
@@ -60,7 +62,8 @@ function App() {
             <Route path="/lab-tests" element={<LabTests />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
-            <Route path="/medicine/:medicineId" element={<MedicineDetailsPage />} />
+            <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />
+            <Route path="/facility-details" element={<BookAppointmentDetailsPage />} />
           </Routes>
         </div>
 
