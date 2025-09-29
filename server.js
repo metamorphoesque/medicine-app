@@ -591,6 +591,302 @@ app.get("/api/healthcare/debug", async (req, res) => {
 
 
 );
+// ---------------------- USER PROFILE ENDPOINTS ----------------------
+// Add these endpoints to your existing server.js file
+
+// Get user profile
+app.get("/api/user/profile/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const result = await pool.query(`
+      SELECT id, username, email, full_name, gender, address, phone_number, 
+             date_of_birth, pincode, blood_group, conditions, allergies, 
+             medication, profile_image, created_at
+      FROM users 
+      WHERE id = $1
+    `, [userId]);
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = result.rows[0];
+    
+    // Format the response to match frontend expectations
+    const formattedUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      fullName: user.full_name || '',
+      gender: user.gender || '',
+      address: user.address || '',
+      phoneNumber: user.phone_number || '',
+      dateOfBirth: user.date_of_birth || '',
+      pincode: user.pincode || '',
+      bloodGroup: user.blood_group || '',
+      conditions: user.conditions || '',
+      allergies: user.allergies || '',
+      medication: user.medication || '',
+      profileImage: user.profile_image || '',
+      createdAt: user.created_at
+    };
+
+    res.json(formattedUser);
+  } catch (err) {
+    console.error('Error fetching user profile:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update user profile
+app.put("/api/user/profile/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const {
+      fullName,
+      gender,
+      address,
+      phoneNumber,
+      dateOfBirth,
+      pincode,
+      bloodGroup,
+      conditions,
+      allergies,
+      medication,
+      profileImage
+    } = req.body;
+
+    // Validate age if date of birth is provided
+    if (dateOfBirth) {
+      const today = new Date();
+      const birth = new Date(dateOfBirth);
+      const age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      
+      let actualAge = age;
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        actualAge = age - 1;
+      }
+      
+      if (actualAge < 18) {
+        return res.status(400).json({ error: "User must be 18 or older" });
+      }
+    }
+
+    // Validate phone number (Indian format)
+    if (phoneNumber && (phoneNumber.length !== 10 || !/^\d{10}$/.test(phoneNumber))) {
+      return res.status(400).json({ error: "Please enter a valid 10-digit phone number" });
+    }
+
+    // Validate pincode (Indian format)
+    if (pincode && (pincode.length !== 6 || !/^\d{6}$/.test(pincode))) {
+      return res.status(400).json({ error: "Please enter a valid 6-digit pincode" });
+    }
+
+    // Build dynamic update query
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (fullName !== undefined) {
+      updates.push(`full_name = $${paramCount}`);
+      values.push(fullName);
+      paramCount++;
+    }
+    
+    if (gender !== undefined) {
+      updates.push(`gender = $${paramCount}`);
+      values.push(gender);
+      paramCount++;
+    }
+    
+    if (address !== undefined) {
+      updates.push(`address = $${paramCount}`);
+      values.push(address);
+      paramCount++;
+    }
+    
+    if (phoneNumber !== undefined) {
+      updates.push(`phone_number = $${paramCount}`);
+      values.push(phoneNumber);
+      paramCount++;
+    }
+    
+    if (dateOfBirth !== undefined) {
+      updates.push(`date_of_birth = $${paramCount}`);
+      values.push(dateOfBirth);
+      paramCount++;
+    }
+    
+    if (pincode !== undefined) {
+      updates.push(`pincode = $${paramCount}`);
+      values.push(pincode);
+      paramCount++;
+    }
+    
+    if (bloodGroup !== undefined) {
+      updates.push(`blood_group = $${paramCount}`);
+      values.push(bloodGroup);
+      paramCount++;
+    }
+    
+    if (conditions !== undefined) {
+      updates.push(`conditions = $${paramCount}`);
+      values.push(conditions);
+      paramCount++;
+    }
+    
+    if (allergies !== undefined) {
+      updates.push(`allergies = ${paramCount}`);
+      values.push(allergies);
+      paramCount++;
+    }
+    
+    if (medication !== undefined) {
+      updates.push(`medication = ${paramCount}`);
+      values.push(medication);
+      paramCount++;
+    }
+    
+    if (profileImage !== undefined) {
+      updates.push(`profile_image = ${paramCount}`);
+      values.push(profileImage);
+      paramCount++;
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    // Add updated_at timestamp
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(userId);
+
+    const query = `
+      UPDATE users 
+      SET ${updates.join(', ')} 
+      WHERE id = ${paramCount} 
+      RETURNING id, username, email, full_name, gender, address, phone_number, 
+                date_of_birth, pincode, blood_group, conditions, allergies, 
+                medication, profile_image, updated_at
+    `;
+
+    const result = await pool.query(query, values);
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = result.rows[0];
+    
+    // Format the response to match frontend expectations
+    const formattedUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      fullName: user.full_name || '',
+      gender: user.gender || '',
+      address: user.address || '',
+      phoneNumber: user.phone_number || '',
+      dateOfBirth: user.date_of_birth || '',
+      pincode: user.pincode || '',
+      bloodGroup: user.blood_group || '',
+      conditions: user.conditions || '',
+      allergies: user.allergies || '',
+      medication: user.medication || '',
+      profileImage: user.profile_image || '',
+      updatedAt: user.updated_at
+    };
+
+    res.json({
+      message: "Profile updated successfully",
+      user: formattedUser
+    });
+
+  } catch (err) {
+    console.error('Error updating user profile:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Upload profile image endpoint (optional - for handling file uploads)
+app.post("/api/user/profile/:userId/image", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { imageUrl } = req.body; // This would be the uploaded image URL
+    
+    const result = await pool.query(
+      "UPDATE users SET profile_image = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING profile_image",
+      [imageUrl, userId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      message: "Profile image updated successfully",
+      profileImage: result.rows[0].profile_image
+    });
+
+  } catch (err) {
+    console.error('Error updating profile image:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Add this endpoint to your server.js file
+
+// ---------------------- LAB TESTS ----------------------
+app.get("/api/lab-tests", async (req, res) => {
+  try {
+    const { category } = req.query;
+    
+    let query = `SELECT * FROM lab_tests WHERE 1=1`;
+    const params = [];
+    
+    if (category && category !== 'all') {
+      params.push(category);
+      query += ` AND category = $${params.length}`;
+    }
+    
+    query += ` ORDER BY name ASC`;
+    
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching lab tests:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get lab packages
+app.get("/api/lab-packages", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT lp.*, 
+             array_agg(
+               json_build_object(
+                 'id', lt.id,
+                 'name', lt.name,
+                 'description', lt.description,
+                 'price', lt.price
+               )
+             ) as included_tests
+      FROM lab_packages lp
+      LEFT JOIN lab_package_items lpi ON lp.id = lpi.package_id
+      LEFT JOIN lab_tests lt ON lpi.test_id = lt.id
+      GROUP BY lp.id, lp.name, lp.description, lp.price
+      ORDER BY lp.name
+    `);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching lab packages:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ---------------------- ROOT ----------------------
 app.get("/", (req, res) => {

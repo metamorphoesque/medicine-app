@@ -1,0 +1,148 @@
+.lab-tests-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.header-section {
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #4a5d23;
+  margin: 0;
+  text-align: left;
+  padding-bottom: 0.5rem;
+}
+
+.title-underline {
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to right, #4a5d23 0%, #6b8e23 50%, #8fbc8f 100%);
+  margin-top: 0.5rem;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.category-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border: 2px solid #e8f5e8;
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(74, 93, 35, 0.2);
+  border-color: #4a5d23;
+}
+
+.category-image-container {
+  position: relative;
+  height: 180px;
+  width: 100%;
+}
+
+.category-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover .category-image {
+  transform: scale(1.05);
+}
+
+.category-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(5, 26, 78, 0.7), rgba(13, 26, 60, 0.7), transparent);
+  color: white;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.category-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.category-description {
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+/* Tablet Styles */
+@media (max-width: 768px) {
+  .lab-tests-container {
+    padding: 1rem;
+  }
+
+  .categories-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .category-image-container {
+    height: 150px;
+  }
+
+  .category-title {
+    font-size: 1.1rem;
+  }
+
+  .category-description {
+    font-size: 0.8rem;
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 480px) {
+  .lab-tests-container {
+    padding: 0.75rem;
+  }
+
+  .page-title {
+    font-size: 1.75rem;
+  }
+
+  .category-overlay {
+    padding: 1rem;
+  }
+
+  .category-title {
+    font-size: 1rem;
+  }
+
+  .category-description {
+    font-size: 0.75rem;
+  }
+
+  .categories-grid {
+    gap: 1rem;
+  }
+}

@@ -1,0 +1,460 @@
+/* Profile.css */
+
+/* Hospital Green Color Variables */
+:root {
+  --hospital-green-light: #66bb6a;
+  --hospital-green-dark: #2e7d32;
+  --hospital-green-medium: #4caf50;
+  --orange-accent: #ff9800;
+  --orange-dark: #f57c00;
+  --bg-light: #f1f8e9;
+  --bg-gradient-start: #e8f5e8;
+  --bg-gradient-end: #fff3e0;
+  --text-gray: #424242;
+  --text-light: #757575;
+  --border-color: #c8e6c9;
+  --white: #ffffff;
+  --error-red: #f44336;
+}
+
+/* Main Container */
+.profile-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  padding: 2rem 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
+}
+
+/* Centered container takes ~55% width */
+.profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Content card */
+.profile-content {
+  width: 55%;
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+}
+
+/* Scrollbar styling for the card */
+.profile-content::-webkit-scrollbar {
+  width: 10px;
+}
+.profile-content::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.03);
+  border-radius: 10px;
+}
+.profile-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--hospital-green-medium), var(--hospital-green-dark));
+  border-radius: 10px;
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-size: 1.2rem;
+  color: var(--text-gray);
+}
+
+/* Profile Image Section */
+.profile-image-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+/* Wrapper to center avatar and overlay controls */
+.profile-image-wrapper {
+  position: relative;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Circular avatar */
+.profile-image {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  border: 4px solid var(--hospital-green-medium);
+  object-fit: cover;
+  background-color: #f5f5f5;
+  display: block;
+}
+
+/* Upload section below avatar */
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Upload button gradient */
+.upload-button {
+  background: linear-gradient(135deg, var(--hospital-green-light) 0%, var(--hospital-green-dark) 100%);
+  color: var(--white);
+  font-weight: 700;
+  padding: 0.6rem 1.25rem;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 18px rgba(76, 175, 80, 0.18);
+}
+
+.upload-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(76, 175, 80, 0.22);
+}
+
+.upload-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  display: inline-block;
+}
+
+/* Hidden file input */
+.file-input {
+  display: none;
+}
+
+/* Remove image */
+.remove-image-btn {
+  background: none;
+  border: none;
+  color: var(--error-red);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.remove-image-btn:hover {
+  color: #d32f2f;
+}
+
+.remove-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Form Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Column container */
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Form Fields */
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-label {
+  color: var(--text-gray);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Input wrapper */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Input Styles */
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 0.92rem;
+  transition: all 0.22s ease;
+  background-color: #fafafa;
+  color: var(--text-gray);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* Focus states */
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--hospital-green-medium);
+  box-shadow: 0 0 0 6px rgba(76, 175, 80, 0.06);
+}
+
+/* Editable vs disabled styles */
+.form-input.editable,
+.form-textarea.editable,
+.form-select.editable {
+  background-color: #ffffff;
+  border-color: rgba(76,175,80,0.35);
+}
+
+.form-input.disabled,
+.form-textarea.disabled,
+.form-select.disabled {
+  background-color: #fbfbfb;
+  color: var(--text-gray);
+  border-color: var(--border-color);
+}
+
+/* Textarea specifics */
+.form-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.3;
+}
+
+/* Phone input container with country code */
+.phone-input-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.country-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--hospital-green-light), var(--hospital-green-medium));
+  color: var(--white);
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 2px solid rgba(76,175,80,0.12);
+}
+
+/* phone input */
+.phone-input {
+  flex: 1;
+}
+
+/* Edit button (pencil) */
+.edit-button {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.18s ease;
+}
+
+.edit-button:hover {
+  background: rgba(6, 120, 45, 0.06);
+}
+
+.edit-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--hospital-green-dark);
+  stroke-width: 1.4;
+}
+
+/* textarea edit smaller right position */
+.textarea-edit {
+  top: 10px;
+}
+
+/* Save small field button (appears per-field) */
+.save-field-btn {
+  margin-top: 0.6rem;
+  align-self: flex-start;
+  background: linear-gradient(135deg, var(--hospital-green-light), var(--hospital-green-dark));
+  color: var(--white);
+  padding: 0.45rem 0.9rem;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.16s ease;
+}
+
+.save-field-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76,175,80,0.14);
+}
+
+/* Action Buttons at bottom */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+/* Primary Save Changes button */
+.save-changes-btn {
+  background: linear-gradient(135deg, var(--hospital-green-light), var(--hospital-green-dark));
+  color: var(--white);
+  padding: 0.8rem 1.25rem;
+  border-radius: 14px;
+  border: none;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(76,175,80,0.16);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.save-changes-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(76,175,80,0.18);
+}
+
+/* Secondary Edit Profile button */
+.edit-profile-btn {
+  background: linear-gradient(135deg, rgba(102,187,106,0.14), rgba(46,125,50,0.06));
+  color: var(--hospital-green-dark);
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  border: 2px solid rgba(76,175,80,0.12);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.edit-profile-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Disabled states for buttons */
+button[disabled], .save-changes-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Small helper text */
+.helper-text {
+  font-size: 0.82rem;
+  color: var(--text-light);
+  margin-top: 0.35rem;
+}
+
+/* Error text */
+.error-text {
+  color: var(--error-red);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+/* Responsive - make the card wider on small screens and stack columns */
+@media (max-width: 1024px) {
+  .profile-content {
+    width: 85%;
+    padding: 1.5rem;
+  }
+  .form-grid {
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .profile-content {
+    width: 92%;
+    padding: 1rem;
+    border-radius: 18px;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .action-buttons {
+    justify-content: center;
+    flex-direction: column-reverse;
+  }
+  .save-changes-btn, .edit-profile-btn {
+    width: 100%;
+  }
+  .profile-image {
+    width: 6.5rem;
+    height: 6.5rem;
+  }
+}
+
+/* Tiny visual polish for inputs when user is editing entire profile */
+.profile-content.editing .form-input,
+.profile-content.editing .form-select,
+.profile-content.editing .form-textarea {
+  border-color: rgba(76,175,80,0.28);
+}
+
+/* Make sure labels and icons align */
+.field-label, .edit-icon, .remove-icon {
+  vertical-align: middle;
+}
+
+/* Accessibility focus ring for keyboard users */
+.edit-button:focus, .upload-button:focus, .save-field-btn:focus, .save-changes-btn:focus, .edit-profile-btn:focus {
+  outline: 3px solid rgba(76,175,80,0.14);
+  outline-offset: 2px;
+}
+
+/* Small card header (if you add one later) */
+.profile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+/* Subtle divider */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.03), rgba(0,0,0,0.04));
+  margin: 1.5rem 0;
+}
+
+/* Tiny helper for required fields */
+.required-dot {
+  color: var(--orange-accent);
+  margin-left: 6px;
+  font-weight: 700;
+}

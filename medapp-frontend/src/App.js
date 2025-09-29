@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./components/Home";
 import BookAppointment from "./components/BookAppointment";
 import LabTests from "./components/LabTests";
+import LabTestsDetails from "./components/LabTestsDetails";
 import Profile from "./components/Profile";
 import MedicinePage from "./components/MedicinePage";
 import MedicineDetailsPage from "./components/MedicineDetailsPage";
@@ -21,9 +22,9 @@ function App() {
     <Router>
       <div 
         className="app"
-        style={{ 
-          backgroundImage: 'url(/images/Background1.png)', 
-          backgroundSize: 'cover', 
+        style={{
+          backgroundImage: 'url(/images/Background1.png)',
+          backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
           minHeight: '100vh'
@@ -32,15 +33,19 @@ function App() {
         {/* Top green header with search and login */}
         <header className="top-header">
           <div className="search-container">
-            <input
+            <input 
               type="text"
               className="search-bar"
-              placeholder="🔍 Search medicines, categories..."
+              placeholder="Search medicines, categories..."
             />
-            <button className="clear-search">✕</button>
+            <button className="search-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#004d40">
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
+            </button>
           </div>
           <button className="auth-btn" onClick={handleAuthClick}>
-            {isLoggedIn ? "LOG OUT" : "LOG IN"} {/* ✅ clearer */}
+            {isLoggedIn ? "LOG OUT" : "SIGN UP"}
           </button>
         </header>
 
@@ -50,7 +55,13 @@ function App() {
             <Link to="/" className="nav-link">HOME</Link>
             <Link to="/book-appointment" className="nav-link">BOOK AN APPOINTMENT</Link>
             <Link to="/lab-tests" className="nav-link">LAB TESTS</Link>
-            <Link to="/profile" className="nav-link">PROFILE</Link>
+            {isLoggedIn ? (
+              <Link to="/profile" className="nav-link">PROFILE</Link>
+            ) : (
+              <button className="nav-link login-nav-btn" onClick={handleAuthClick}>
+                LOG IN
+              </button>
+            )}
           </div>
         </nav>
 
@@ -60,6 +71,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/book-appointment" element={<BookAppointment />} />
             <Route path="/lab-tests" element={<LabTests />} />
+            <Route path="/lab-tests/:category" element={<LabTestsDetails />} />
+            
             <Route path="/profile" element={<Profile />} />
             <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
             <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />

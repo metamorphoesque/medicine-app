@@ -1,0 +1,452 @@
+/* LabTestsDetails.css
+   Original rules preserved; additions marked with comments
+*/
+
+.lab-tests-details-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 2rem;
+  position: relative;
+}
+
+/* Back button */
+.back-button-top {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  background: none;
+  border: none;
+  color: #4a5d23;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.3s ease;
+  z-index: 10;
+}
+
+.back-button-top:hover {
+  color: #6b8e23;
+  text-decoration: underline;
+}
+
+/* MAIN LAYOUT (group centered) */
+/* Added justify-content:center so the main transparent container visually sits centered.
+   Kept max-width so layout doesn't stretch too wide. */
+.main-layout {
+  display: flex;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-top: 3rem;
+  justify-content: center;    /* NEW: center the layout group horizontally */
+  align-items: flex-start;    /* NEW: align top edges */
+  position: relative;
+}
+
+/* Left Sidebar Filters */
+/* Kept most rules. Made it sticky so it stays visible while the main container scrolls. */
+.filters-sidebar {
+  width: 250px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  padding: 1.5rem;
+  height: fit-content;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(74, 93, 35, 0.2);
+  position: sticky;          /* NEW: keeps sidebar visible while scrolling */
+  top: 110px;                /* NEW: offset to avoid top bar/back button */
+  align-self: flex-start;
+  z-index: 5;
+}
+
+.filters-title {
+  font-size: 1.3rem;
+  color: #4a5d23;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.filter-btn {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  color: #495057;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.filter-btn:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  border-color: #4a5d23;
+  color: #4a5d23;
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #4a5d23 0%, #6b8e23 100%);
+  border-color: #4a5d23;
+  color: white;
+  box-shadow: 0 4px 15px rgba(74, 93, 35, 0.3);
+}
+
+/* Main Content Container */
+/* This is the centered transparent container you asked for.
+   It takes roughly 55% of screen width (as requested) and has an internal scroll
+   so it can expand while staying within the viewport. */
+.main-content-container {
+  flex: 1;
+  width: 55%;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 600px;
+  /* NEW: make the container scroll internally if content grows bigger than viewport */
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+}
+
+/* Optional: nicer scrollbar for main content (non-invasive) */
+.main-content-container::-webkit-scrollbar {
+  width: 10px;
+}
+.main-content-container::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.03);
+  border-radius: 8px;
+}
+.main-content-container::-webkit-scrollbar-thumb {
+  background: rgba(74,93,35,0.15);
+  border-radius: 8px;
+}
+
+/* Header area inside the centered container */
+.header-section {
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.page-title {
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #4a5d23;
+  margin: 0;
+  text-align: left;
+  padding-bottom: 0.5rem;
+}
+
+.title-underline {
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(to right, #4a5d23 0%, #6b8e23 50%, #8fbc8f 100%);
+  margin-top: 0.5rem;
+}
+
+/* Tests Grid */
+.tests-section, .packages-section {
+  margin-bottom: 2rem;
+}
+
+.tests-grid, .packages-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+/* Test Cards */
+.test-card, .package-card {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 2px solid #f1f3f4;
+  transition: all 0.3s ease;
+  position: relative;
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+}
+
+.test-card:hover, .package-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(74, 93, 35, 0.2);
+  border-color: #4a5d23;
+}
+
+.test-card-content, .package-card-content {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.test-header, .package-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.test-name, .package-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  flex: 1;
+  line-height: 1.3;
+}
+
+.test-price, .package-price {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #e67e22;
+  background: rgba(230, 126, 34, 0.15);
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
+.test-description, .package-description {
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  flex: 1;
+  min-height: 40px;
+}
+
+.test-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f3f4;
+}
+
+.detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #4a5d23;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.detail-value {
+  font-size: 0.8rem;
+  color: #666;
+  background: #f8f9fa;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-weight: 500;
+  flex: 1;
+  text-align: center;
+}
+
+.fasting-required {
+  background: #fff3cd !important;
+  color: #856404 !important;
+}
+
+.no-fasting {
+  background: #d1edff !important;
+  color: #0c5aa6 !important;
+}
+
+/* Included Tests for Packages */
+.included-tests {
+  flex: 1;
+  margin-top: 1rem;
+}
+
+.included-tests h5 {
+  font-size: 0.9rem;
+  color: #4a5d23;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+}
+
+.included-tests ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.included-tests li {
+  background: #f0f8ff;
+  color: #2c3e50;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  border-left: 3px solid #4a5d23;
+}
+
+/* Overlay Buttons */
+.test-card-overlay, .package-card-overlay {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  padding: 1rem;
+}
+
+.book-appointment-btn, .book-package-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+  border: none;
+  color: white;
+  padding: 0.9rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.book-appointment-btn:hover, .book-package-btn:hover {
+  background: linear-gradient(135deg, #d35400 0%, #e67e22 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(230, 126, 34, 0.4);
+}
+
+/* Loading and Error States */
+.loading, .error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.error {
+  color: #e74c3c;
+  background: #ffeaea;
+  border-radius: 10px;
+  margin: 2rem 0;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+}
+
+.empty-state h3 {
+  color: #4a5d23;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .main-content-container {
+    width: 60%;
+  }
+  
+  .filters-sidebar {
+    width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+    padding-top: 2rem;
+  }
+
+  .filters-sidebar {
+    width: 100%;
+    order: 2;
+    position: relative;  /* make sticky behavior go away on small screens for better stacking */
+    top: auto;
+  }
+
+  .filter-options {
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .main-content-container {
+    width: 100%;
+    order: 1;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .tests-grid, .packages-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-title {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  .test-card, .package-card {
+    min-height: 320px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .detail-item {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .lab-tests-details-container {
+    padding: 1rem;
+  }
+
+  .main-content-container {
+    padding: 1.5rem;
+  }
+
+  .test-header, .package-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  .test-price, .package-price {
+    align-self: flex-start;
+  }
+}
