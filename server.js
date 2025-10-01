@@ -290,6 +290,74 @@ app.get("/api/medicines", async (req, res) => {
   }
 });
 
+// ------------SIMILAR MEDICINE-------------
+
+app.get("/api/medicines/:id/similar", async (req, res) => {
+  try {
+    const medicineId = req.params.id;
+    
+    // First, get the current medicine's details
+    const medicineResult = await pool.query(`
+      SELECT symptoms, composition, generic, category
+      FROM medicines
+      WHERE id = $1
+    `, [medicineId]);
+
+    if (!medicineResult.rows.length) {
+      return res.status(404).json({ error: "Medicine not found" });
+    }
+
+    const currentMedicine = medicineResult.rows[0];
+    
+    // Build a query to find similar medicines based on symptoms, composition, or generic name
+    let query = `
+      SELECT m.*, COALESCE(m.manufacturer_name, m.generic, 'Unknown') as manufacturer_name,
+             c.name as category_name, c.slug as category_slug
+      FROM medicines m
+      LEFT JOIN categories c ON m.category = c.id
+      WHERE m.id != $1
+    `;
+    const params = [medicineId];
+    const conditions = [];
+
+    // Add similarity conditions
+    if (currentMedicine.symptoms) {
+      params.push(`%${currentMedicine.symptoms}%`);
+      conditions.push(`m.symptoms ILIKE $${params.length}`);
+    }
+
+    if (currentMedicine.composition) {
+      params.push(`%${currentMedicine.composition}%`);
+      conditions.push(`m.composition ILIKE $${params.length}`);
+    }
+
+    if (currentMedicine.generic) {
+      params.push(`%${currentMedicine.generic}%`);
+      conditions.push(`m.generic ILIKE $${params.length}`);
+    }
+
+    if (currentMedicine.category) {
+      params.push(currentMedicine.category);
+      conditions.push(`m.category = $${params.length}`);
+    }
+
+    // If we have any conditions, add them with OR
+    if (conditions.length > 0) {
+      query += ` AND (${conditions.join(' OR ')})`;
+    }
+
+    // Order by doctor rating and limit results
+    query += ` ORDER BY m.doctor_rating DESC NULLS LAST, m.name ASC LIMIT 10`;
+
+    const result = await pool.query(query, params);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching similar medicines:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get("/api/medicines/:id", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -522,31 +590,67 @@ app.get("/api/healthcare/nearby", async (req, res) => {
 
 app.get("/api/healthcare/byState", async (req, res) => {
   try {
-    const { state, type, limit = 20 } = req.query;
+    const { state, type, limit = 20, pincode } = req.query;
     
-    if (!state) {
-      return res.status(400).json({ error: "State parameter is required" });
-    }
+    console.log('=== Healthcare Search Request ===');
+    console.log('State:', state);
+    console.log('Type:', type);
+    console.log('Pincode:', pincode);
+    console.log('Limit:', limit);
 
     const queryLimit = Math.min(parseInt(limit) || 20, 100);
 
     let query = `
       SELECT id, name, facility_type as type, state, address, phone, 
-             latitude, longitude, rating, opening_hours, doctor_category
+             latitude, longitude, rating, opening_hours, doctor_category, pincode
       FROM healthcare_facilities
-      WHERE LOWER(state) = LOWER($1)
+      WHERE 1=1
     `;
-    const params = [state];
+    const params = [];
 
-    if (type && type !== "all") {
-      query += ` AND (LOWER(facility_type) = LOWER($2) OR LOWER(doctor_category) = LOWER($2))`;
-      params.push(type);
+    // Add state filter (only if provided)
+    if (state && state.trim() !== '') {
+      params.push(state.trim());
+      query += ` AND LOWER(state) = LOWER($${params.length})`;
+    }
+
+    // Add pincode filter (only if provided)
+    if (pincode && pincode.trim() !== '') {
+      params.push(pincode.trim());
+      query += ` AND pincode = $${params.length}`;
+    }
+
+    // Add type filter (only if provided and not 'all')
+    if (type && type !== "all" && type.trim() !== '') {
+      params.push(type.trim());
+      query += ` AND (LOWER(facility_type) = LOWER($${params.length}) OR LOWER(doctor_category) = LOWER($${params.length}))`;
     }
 
     query += ` ORDER BY rating DESC NULLS LAST, name ASC LIMIT $${params.length + 1}`;
     params.push(queryLimit);
 
+    console.log('=== SQL Query ===');
+    console.log('Query:', query);
+    console.log('Params:', params);
+
     const result = await pool.query(query, params);
+
+    console.log('=== Query Results ===');
+    console.log('Found records:', result.rows.length);
+    
+    if (result.rows.length > 0) {
+      console.log('Sample result:', result.rows[0]);
+    } else {
+      // If no results, let's check what's in the database
+      const debugQuery = `
+        SELECT DISTINCT state, facility_type, COUNT(*) as count
+        FROM healthcare_facilities
+        GROUP BY state, facility_type
+        ORDER BY state, facility_type
+      `;
+      const debugResult = await pool.query(debugQuery);
+      console.log('Available data in database:', debugResult.rows);
+    }
 
     const formattedResults = result.rows.map(facility => ({
       ...facility,
@@ -558,14 +662,24 @@ app.get("/api/healthcare/byState", async (req, res) => {
     res.json({ 
       results: formattedResults,
       total: formattedResults.length,
-      state: state,
-      type: type || 'all'
+      state: state || null,
+      type: type || 'all',
+      pincode: pincode || null
     });
 
   } catch (error) {
     console.error("Error in healthcare byState:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ 
+      error: "Internal server error", 
+      details: error.message 
+    });
   }
+});
+// fetch  similar medicines endpoint here
+// Alias without /api prefix for backward compatibility
+app.get("/healthcare/byState", async (req, res) => {
+  req.url = '/api' + req.url;
+  return app._router.handle(req, res);
 });
 
 app.get("/api/healthcare/debug", async (req, res) => {
@@ -588,8 +702,6 @@ app.get("/api/healthcare/debug", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 }
-
-
 );
 // ---------------------- USER PROFILE ENDPOINTS ----------------------
 // Add these endpoints to your existing server.js file

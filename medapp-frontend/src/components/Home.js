@@ -19,6 +19,7 @@ const Home = () => {
   const [showHealthcareResults, setShowHealthcareResults] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
+
   const scrollRef = useRef(null);
   const bannerScrollRef = useRef(null);
   const healthcareScrollRef = useRef(null);
@@ -181,6 +182,10 @@ const handleBookAppointment = (facility) => {
       } 
     });
   };
+
+  const handleCartClick = () => {
+  navigate('/cart');
+};
 
   const handleBannerScroll = (direction) => {
     const scrollAmount = direction === 'left' ? -300 : 300;

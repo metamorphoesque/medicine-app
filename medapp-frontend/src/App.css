@@ -1,3 +1,4 @@
+
 * {
   margin: 0;
   padding: 0;
@@ -6,16 +7,19 @@
 
 body {
   font-family: 'Arial', sans-serif;
-  background: url("../public/images/Background1.png") no-repeat center center fixed;
-  background-size: cover;
   margin: 0;
   padding: 0;
+  background: #f5f5f5; /* fallback in case background image fails */
 }
 
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-image: url("../public/images/Background1.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 /* Top header with search and login */
@@ -30,7 +34,6 @@ body {
 }
 
 .search-container {
-  position: relative;
   display: flex;
   align-items: center;
   background-color: white;
@@ -59,9 +62,6 @@ body {
   border: none;
   cursor: pointer;
   padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 50%;
   transition: background-color 0.3s;
 }
@@ -73,7 +73,7 @@ body {
 .auth-btn {
   position: absolute;
   right: 20px;
-  background: linear-gradient(135deg, #ffb347, #ff8c00); /* light orange to dark orange */
+  background: linear-gradient(135deg, #ffb347, #ff8c00);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -119,25 +119,20 @@ body {
   font-family: inherit;
 }
 
+.nav-link:hover {
+  color: #6b8e23;
+  background-color: #e8f0d8;
+}
+
 .login-nav-btn {
   background: linear-gradient(135deg, #ffb347, #ff8c00);
-  color: white;
+  color: white !important;
   font-weight: bold;
 }
 
 .login-nav-btn:hover {
   background: linear-gradient(135deg, #ff8c00, #ff7700);
   transform: translateY(-1px);
-}
-
-.nav-link:hover {
-  color: #6b8e23;
-  background-color: #e8f0d8;
-}
-
-.login-nav-btn:hover {
-  color: white; /* Override the default hover color for login button */
-  background: linear-gradient(135deg, #ff8c00, #ff7700);
 }
 
 /* Floating buttons */
@@ -147,36 +142,50 @@ body {
   right: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  align-items: center;
+}
+
+.fab-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  text-align: center;
 }
 
 .fab-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
   background: white;
   color: green;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 25px;
-  font-weight: bold;
-  font-size: 14px;
-  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   transition: all 0.3s ease;
 }
 
 .fab-btn:hover {
   background: #e8f0d8;
+  transform: scale(1.05);
+}
+
+.fab-label {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #004d40;
+  font-weight: 600;
 }
 
 /* Page container */
 .page-container {
   flex: 1;
   padding: 20px;
-  background-color: transparent;
-  background: rgba(255, 255, 255, 0.9); /* white with transparency */
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
+  margin: 20px;
 }
 
 /* Responsive design */
@@ -197,8 +206,9 @@ body {
     gap: 15px;
     align-items: center;
   }
-  
-  .nav-links {
-    gap: 20px;
+
+  .page-container {
+    margin: 10px;
+    padding: 15px;
   }
 }

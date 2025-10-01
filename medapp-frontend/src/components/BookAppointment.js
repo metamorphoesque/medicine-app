@@ -66,7 +66,7 @@ const BookAppointment = () => {
     setLoading(true);
 
     try {
-      let url = `http://localhost:5000/healthcare/byState?state=${selectedState}&type=${type}&limit=20`;
+     let url = `http://localhost:5000/api/healthcare/byState?state=${selectedState}&type=${type}&limit=20`;
       
       // If pincode is provided, add it to the search
       if (pincode.trim()) {

@@ -90,14 +90,6 @@ const MedicinePage = () => {
     }
   }, [categoryName, searchParams]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const newParams = new URLSearchParams();
-    if (searchTerm.trim()) newParams.set('search', searchTerm.trim());
-    newParams.set('page', '1');
-    setSearchParams(newParams);
-  };
-
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       const newParams = new URLSearchParams(searchParams);
@@ -115,11 +107,13 @@ const MedicinePage = () => {
     navigate(`/medicines/${medicineId}`); // ✅ plural
   };
 
-  const clearSearch = () => {
-    setSearchTerm('');
-    const newParams = new URLSearchParams();
-    newParams.set('page', '1');
-    setSearchParams(newParams);
+  const handleAddToCart = (medicine, e) => {
+    e.stopPropagation();
+    // Add to cart functionality - can store in localStorage or context
+    console.log('Add to cart:', medicine.name);
+    
+    // Navigate to cart page
+    navigate('/component/Cart');
   };
 
   const getCategoryDisplayName = () => {
@@ -133,7 +127,7 @@ const MedicinePage = () => {
 
   if (loading) {
     return (
-      <div className="medicine-page">
+      <div className="medicine-page loading-page">
         <div className="loading-spinner">
           <div className="spinner"></div>
           <p>Loading medicines...</p>
@@ -163,34 +157,6 @@ const MedicinePage = () => {
       <div className="medicine-layout">
         {/* Main Content */}
         <div className="medicine-content">
-          {/* Search Section */}
-          <div className="search-filter-section">
-            <form onSubmit={handleSearch} className="search-form">
-              <div className="search-input-container">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search medicines..."
-                  className="search-input"
-                />
-                {searchTerm && (
-                  <button 
-                    type="button" 
-                    onClick={clearSearch}
-                    className="clear-search-btn"
-                    aria-label="Clear search"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-              <button type="submit" className="search-btn">
-                Search
-              </button>
-            </form>
-          </div>
-
           {/* Error State */}
           {error && (
             <div className="error">
@@ -207,17 +173,7 @@ const MedicinePage = () => {
             <div className="empty-state">
               <div className="empty-state-icon">💊</div>
               <h2>No medicines found</h2>
-              <p>
-                {searchTerm 
-                  ? `No medicines match "${searchTerm}" in ${getCategoryDisplayName()}`
-                  : `No medicines available in ${getCategoryDisplayName()}`
-                }
-              </p>
-              {searchTerm && (
-                <button onClick={clearSearch} className="clear-search-btn-large">
-                  Clear Search
-                </button>
-              )}
+              <p>No medicines available in {getCategoryDisplayName()}</p>
             </div>
           )}
 
@@ -258,7 +214,9 @@ const MedicinePage = () => {
                           backgroundColor: getRandomColor()
                         }}
                       >
-                        {medicine.name.charAt(0).toUpperCase()}
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
+                        </svg>
                       </div>
                     </div>
                     
@@ -285,7 +243,7 @@ const MedicinePage = () => {
                       
                       {medicine.description && (
                         <p className="medicine-description">
-                          {medicine.description.length > 80 
+                          <strong>Description:</strong> {medicine.description.length > 80 
                             ? `${medicine.description.substring(0, 80)}...` 
                             : medicine.description
                           }
@@ -299,16 +257,18 @@ const MedicinePage = () => {
                         className="action-btn view-btn"
                         onClick={(e) => handleViewDetails(medicine.id, e)}
                       >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
                         View Details
                       </button>
                       <button 
                         className="action-btn add-cart-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Add to cart functionality
-                          console.log('Add to cart:', medicine.name);
-                        }}
+                        onClick={(e) => handleAddToCart(medicine, e)}
                       >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
                         Add to Cart
                       </button>
                     </div>
@@ -324,6 +284,9 @@ const MedicinePage = () => {
                     disabled={currentPage === 1}
                     className="pagination-btn"
                   >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
                     Previous
                   </button>
                   
@@ -355,6 +318,9 @@ const MedicinePage = () => {
                     className="pagination-btn"
                   >
                     Next
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
                   </button>
                 </div>
               )}
@@ -365,10 +331,20 @@ const MedicinePage = () => {
         {/* Filter Sidebar */}
         <div className="filter-sidebar">
           <div className="filter-panel">
-            <h3>Filter Medicines</h3>
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+              </svg>
+              Filter Medicines
+            </h3>
             
             <div className="filter-group">
-              <label>Price Range</label>
+              <label>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                Price Range
+              </label>
               <select>
                 <option>All Prices</option>
                 <option>Under $10</option>
@@ -379,7 +355,12 @@ const MedicinePage = () => {
             </div>
 
             <div className="filter-group">
-              <label>Manufacturer</label>
+              <label>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Manufacturer
+              </label>
               <select>
                 <option>All Manufacturers</option>
                 <option>Brand A</option>
@@ -389,7 +370,12 @@ const MedicinePage = () => {
             </div>
 
             <div className="filter-group">
-              <label>Rating</label>
+              <label>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                Rating
+              </label>
               <select>
                 <option>All Ratings</option>
                 <option>4+ Stars</option>
@@ -399,7 +385,12 @@ const MedicinePage = () => {
             </div>
 
             <div className="filter-group">
-              <label>Availability</label>
+              <label>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 0 0-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/>
+                </svg>
+                Availability
+              </label>
               <select>
                 <option>All</option>
                 <option>In Stock</option>
@@ -407,17 +398,22 @@ const MedicinePage = () => {
               </select>
             </div>
 
-            <button className="apply-filters-btn">Apply Filters</button>
-            <button className="clear-filters-btn">Clear All</button>
+            <div className="filter-actions">
+              <button className="apply-filters-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+                Apply Filters
+              </button>
+              <button className="clear-filters-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+                Clear All
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Floating Action Buttons */}
-      <div className="floating-buttons">
-        <button className="fab" onClick={() => window.scrollTo(0, 0)} title="Back to top">
-          ↑
-        </button>
       </div>
     </div>
   );
