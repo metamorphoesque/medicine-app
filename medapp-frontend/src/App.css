@@ -1,4 +1,3 @@
-
 * {
   margin: 0;
   padding: 0;
@@ -9,7 +8,7 @@ body {
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
-  background: #f5f5f5; /* fallback in case background image fails */
+  background: #f5f5f5;
 }
 
 .app {
@@ -20,11 +19,35 @@ body {
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
+  position: relative;
+}
+
+/* White transparency overlay */
+.app::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.85);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Ensure all content appears above the overlay */
+.top-header,
+.nav-bar,
+.page-container,
+.app-footer,
+.floating-buttons {
+  position: relative;
+  z-index: 1;
 }
 
 /* Top header with search and login */
 .top-header {
-  background-color: #004d40; /* dark hospital green */
+  background-color: #004d40;
   padding: 12px 20px;
   display: flex;
   justify-content: center;
@@ -89,6 +112,31 @@ body {
   background: linear-gradient(135deg, #ff8c00, #ff7700);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Updated Auth Link Button for Top Header */
+.auth-link-btn {
+  background: white;
+  color: #0b6835;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  right: 20px;
+}
+
+.auth-link-btn:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Navigation bar */
@@ -186,6 +234,55 @@ body {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
   margin: 20px;
+  min-height: calc(100vh - 200px);
+  padding-bottom: 20px;
+}
+
+/* Footer Section */
+.app-footer {
+  width: 100%;
+  height: 25vh;
+  min-height: 250px;
+  background: #004d40;
+  margin-top: 50px;
+  padding: 40px 60px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.footer-content {
+  width: 100%;
+  max-width: 1400px;
+  background: white;
+  padding: 30px 40px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.footer-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #004d40;
+  margin: 0 0 10px 0;
+  text-align: left;
+}
+
+.footer-underline {
+  width: 100%;
+  height: 3px;
+  background: #004d40;
+  margin-bottom: 20px;
+  border-radius: 2px;
+}
+
+.footer-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  margin: 0;
+  text-align: justify;
+  opacity: 0.9;
 }
 
 /* Responsive design */
@@ -196,7 +293,8 @@ body {
     padding: 15px 20px;
   }
   
-  .auth-btn {
+  .auth-btn,
+  .auth-link-btn {
     position: static;
     margin-top: 10px;
   }
@@ -210,5 +308,24 @@ body {
   .page-container {
     margin: 10px;
     padding: 15px;
+  }
+
+  .app-footer {
+    padding: 30px 20px;
+    height: auto;
+    min-height: 200px;
+  }
+
+  .footer-content {
+    padding: 20px 25px;
+  }
+
+  .footer-title {
+    font-size: 24px;
+  }
+
+  .footer-text {
+    font-size: 14px;
+    line-height: 1.6;
   }
 }

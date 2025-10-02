@@ -9,6 +9,7 @@ import Profile from "./components/Profile";
 import MedicinePage from "./components/MedicinePage";
 import MedicineDetailsPage from "./components/MedicineDetailsPage";
 import BookAppointmentDetailsPage from './BookAppointmentDetailsPage';
+import SignUp from "./components/SignUp";
 import { WishlistProvider } from "./components/Wishlist";
 import Wishlist from "./components/Wishlist";
 import Cart from './components/Cart';
@@ -82,9 +83,23 @@ function FloatingButtons() {
   );
 }
 
+// Footer component
+function Footer() {
+  return (
+    <footer className="app-footer">
+      <div className="footer-content">
+        <h2 className="footer-title">About</h2>
+        <div className="footer-underline"></div>
+        <p className="footer-text">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+      </div>
+    </footer>
+  );
+}
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const handleAuthClick = () => setIsLoggedIn(!isLoggedIn);
 
   return (
     <WishlistProvider>
@@ -99,12 +114,12 @@ function App() {
             minHeight: '100vh'
           }}
         >
-          {/* Top green header with search and login */}
+          {/* Top green header with search and sign up button */}
           <header className="top-header">
             <SearchBar />
-            <button className="auth-btn" onClick={handleAuthClick}>
-              {isLoggedIn ? "LOG OUT" : "SIGN UP"}
-            </button>
+            <Link to="/signup" className="auth-link-btn">
+              SIGN UP
+            </Link>
           </header>
 
           {/* Navigation bar */}
@@ -116,9 +131,7 @@ function App() {
               {isLoggedIn ? (
                 <Link to="/profile" className="nav-link">PROFILE</Link>
               ) : (
-                <button className="nav-link login-nav-btn" onClick={handleAuthClick}>
-                  LOG IN
-                </button>
+                <Link to="/signup" className="nav-link">SIGN IN / SIGN UP</Link>
               )}
             </div>
           </nav>
@@ -135,9 +148,14 @@ function App() {
               <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
               <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />
               <Route path="/facility-details" element={<BookAppointmentDetailsPage />} />
+              <Route path="/lab-tests/:category" element={<LabTests />} />
               <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/signup" element={<SignUp onLoginSuccess={() => setIsLoggedIn(true)} />} />
             </Routes>
           </div>
+
+          {/* Footer */}
+          <Footer />
 
           {/* Global Floating Action Buttons */}
           <FloatingButtons />

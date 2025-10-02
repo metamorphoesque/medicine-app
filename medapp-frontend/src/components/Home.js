@@ -18,12 +18,15 @@ const Home = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [showHealthcareResults, setShowHealthcareResults] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [currentLabTestIndex, setCurrentLabTestIndex] = useState(0);
+  const [showLocationError, setShowLocationError] = useState(false);
 
   const scrollRef = useRef(null);
   const bannerScrollRef = useRef(null);
   const healthcareScrollRef = useRef(null);
   const locationRef = useRef(null);
+  const labTestScrollRef = useRef(null);
   const navigate = useNavigate();
 
   const banners = [
@@ -55,6 +58,67 @@ const Home = () => {
     { id: "doctor", name: "Other Services", image: `${process.env.PUBLIC_URL}/images/doctor.png` }
   ];
 
+  const labTests = [
+  { 
+    id: 1, 
+    name: "Diabetes & Blood Sugar", 
+    slug: "diabetes-and-blood-sugar", 
+    category: "Diabetes & Blood Sugar",
+    image: `${process.env.PUBLIC_URL}/images/Diabetes&BloodSugar.png` 
+  },
+  { 
+    id: 2, 
+    name: "Thyroid & Hormones",
+    slug: "thyroid-and-hormones",
+    category: "Thyroid & Hormones",
+    image: `${process.env.PUBLIC_URL}/images/Thyroid&Hormones.png` 
+  },
+  { 
+    id: 3, 
+    name: "Cardiac Health",
+    slug: "cardiac-health", 
+    category: "Cardiac Health", 
+    image: `${process.env.PUBLIC_URL}/images/CardiacHealth.png` 
+  },
+  { 
+    id: 4, 
+    name: "General Health",
+    slug: "general-health", 
+    category: "General Health",
+    image: `${process.env.PUBLIC_URL}/images/GeneralHealth.png` 
+  },
+  { 
+    id: 5, 
+    name: "Vitamins & Deficiencies", 
+    slug: "vitamins-and-deficiencies",
+    category: "Vitamins & Deficiencies",
+    image: `${process.env.PUBLIC_URL}/images/vitamins.png` 
+  },
+  { 
+    id: 6, 
+    name: "Liver & Kidney", 
+    slug: "liver-and-kidney",
+    category: "Liver & Kidney",
+    image: `${process.env.PUBLIC_URL}/images/liver&Kidney.png` 
+  },
+  { 
+    id: 7, 
+    name: "Women's Health",
+    slug: "women-health", 
+    category: "Women's Health",
+    image: `${process.env.PUBLIC_URL}/images/womenshealth.png` 
+  },
+
+  { 
+    id: 8, 
+    name: "Infectious Diseases",
+    slug: "infectious-diseases", 
+    category: "Infectious Diseases",
+    image: `${process.env.PUBLIC_URL}/images/infectious.png` 
+  }
+];
+
+
   const locationOptions = [
     { id: "current", name: "Current Location", coordinates: null, state: null },
     { id: "andhra_pradesh", name: "Andhra Pradesh", coordinates: null, state: "Andhra Pradesh" },
@@ -70,6 +134,14 @@ const Home = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Auto-slide for lab tests - transitions every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentLabTestIndex((prevIndex) => (prevIndex + 1) % labTests.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [labTests.length]);
 
   const handleCategoryClick = (category) => {
     setActiveCategory(category.id);
@@ -89,6 +161,7 @@ const Home = () => {
           const location = { lat: position.coords.latitude, lng: position.coords.longitude };
           setUserLocation(location);
           setSelectedLocation("Current Location");
+          setShowLocationError(false);
           if (selectedHealthcareType) searchHealthcare(location, selectedHealthcareType);
           setLoadingHealthcare(false);
         },
@@ -144,11 +217,16 @@ const Home = () => {
   };
 
   const handleHealthcareTypeClick = async (type) => {
-    setSelectedHealthcareType(type);
-    if (!userLocation && selectedLocation === "Current Location") {
-      getCurrentLocation();
+    // Check if Current Location is selected but location not available
+    if (selectedLocation === "Current Location" && !userLocation) {
+      setShowLocationError(true);
+      setSelectedHealthcareType(null);
       return;
     }
+
+    setShowLocationError(false);
+    setSelectedHealthcareType(type);
+    
     if (selectedLocation === "Current Location") {
       await searchHealthcare(userLocation, type);
     } else {
@@ -162,14 +240,15 @@ const Home = () => {
   const handleLocationSelect = (location) => {
     setShowLocationDropdown(false);
     setSelectedLocation(location.name);
+    setShowLocationError(false);
 
     if (location.id === "current") getCurrentLocation();
     else if (selectedHealthcareType) searchHealthcareByState(location.state, selectedHealthcareType);
   };
 
-const handleBookAppointment = (facility) => {
-  navigate('/facility-details', { state: { facility } });
-};
+  const handleBookAppointment = (facility) => {
+    navigate('/facility-details', { state: { facility } });
+  };
 
   const handleSeeMore = () => {
     navigate('/book-appointment', { 
@@ -184,13 +263,25 @@ const handleBookAppointment = (facility) => {
   };
 
   const handleCartClick = () => {
-  navigate('/cart');
-};
+    navigate('/cart');
+  };
 
   const handleBannerScroll = (direction) => {
     const scrollAmount = direction === 'left' ? -300 : 300;
     if (bannerScrollRef.current) bannerScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
   };
+
+const handleLabTestClick = (labTest) => {
+  navigate(`/lab-tests/${labTest.slug}`, { 
+    state: { category: labTest.category } 
+  });
+};
+
+  const handleLabTestsSeeMore = () => {
+    navigate('/lab-tests');
+  };
+
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, 6);
 
   return (
     <div className="home-page">
@@ -237,69 +328,93 @@ const handleBookAppointment = (facility) => {
         )}
       </div>
 
-      {/* Categories */}
-      <div className="section-container">
-        <div className="section-header">
-          <h2 className="section-title">Search By Category</h2>
-          <div className="section-underline"></div>
-        </div>
-        <div className="section-content">
-          <div className="items-scroll" ref={scrollRef}>
-            <div className="items-row">
-              {categories.map((category) => (
-                <div key={category.id} className="item">
-                  <button
-                    className={`item-button ${activeCategory === category.id ? "active" : ""}`}
-                    onClick={() => handleCategoryClick(category)}
-                  >
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="item-image"
-                      onError={handleImageError}
-                    />
-                    <div className="item-placeholder" style={{ display: "none" }}>
-                      {category.name.split(" ")[0]}
-                    </div>
-                  </button>
-                  <div className="item-label">{category.name}</div>
-                </div>
-              ))}
-            </div>
+      {/* Search By Category Section */}
+      <div className="new-section-wrapper">
+        <h2 className="new-section-title">Search By Category</h2>
+        <div className="new-section-underline"></div>
+        <div className={`new-section-container ${showAllCategories ? 'expanded' : ''}`}>
+          <div className={`categories-grid ${showAllCategories ? 'grid-view' : 'flex-view'}`}>
+            {displayedCategories.map((category) => (
+              <div key={category.id} className="new-item">
+                <button
+                  className={`new-item-button ${activeCategory === category.id ? "active" : ""}`}
+                  onClick={() => handleCategoryClick(category)}
+                >
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="new-item-image"
+                    onError={handleImageError}
+                  />
+                  <div className="new-item-placeholder" style={{ display: "none" }}>
+                    {category.name.split(" ")[0]}
+                  </div>
+                </button>
+                <div className="new-item-label">{category.name}</div>
+              </div>
+            ))}
           </div>
+          <button className="new-see-more-btn" onClick={() => setShowAllCategories(!showAllCategories)}>
+            {showAllCategories ? "Show Less" : "See More"}
+          </button>
         </div>
       </div>
 
-      {/* Healthcare Section */}
-      <div className="section-container">
-        <div className="section-header">
-          <h2 className="section-title">Search Available Healthcare Nearby</h2>
-          <div className="section-underline"></div>
+      {/* Lab Tests Section */}
+      <div className="new-section-wrapper">
+        <h2 className="new-section-title">Lab Tests</h2>
+        <div className="new-section-underline"></div>
+        <div className="lab-test-container">
+          <div className="lab-test-slideshow">
+            {labTests.map((test, index) => (
+              <div
+                key={test.id}
+                className={`lab-test-slide ${index === currentLabTestIndex ? 'active' : ''} ${index === (currentLabTestIndex - 1 + labTests.length) % labTests.length ? 'prev' : ''}`}
+                onClick={() => handleLabTestClick(test)}
+              >
+                <img src={test.image} alt={test.name} className="lab-test-image" />
+              </div>
+            ))}
+          </div>
+          <button className="new-see-more-btn lab-test-btn" onClick={handleLabTestsSeeMore}>
+            See More
+          </button>
         </div>
-        <div className="section-content">
-          <div className="items-scroll" ref={healthcareScrollRef}>
-            <div className="items-row">
-              {healthcareTypes.map((type) => (
-                <div key={type.id} className="item">
-                  <button
-                    className={`item-button ${selectedHealthcareType === type.id ? "active" : ""}`}
-                    onClick={() => handleHealthcareTypeClick(type.id)}
-                    disabled={loadingHealthcare}
-                  >
-                    <img
-                      src={type.image}
-                      alt={type.name}
-                      className="item-image"
-                      onError={handleImageError}
-                    />
-                    <div className="item-placeholder" style={{ display: "none" }}>
-                      {type.name.split(" ")[0]}
-                    </div>
-                  </button>
-                  <div className="item-label">{type.name}</div>
-                </div>
-              ))}
-            </div>
+      </div>
+
+      {/* Nearby Healthcare Facilities Section */}
+      <div className="new-section-wrapper">
+        <h2 className="new-section-title">Nearby Healthcare Facilities</h2>
+        <div className="new-section-underline"></div>
+        
+        {showLocationError && (
+          <div className="location-error-message">
+            <p>⚠️ Please select "Current Location" from the dropdown above to search for nearby healthcare facilities.</p>
+          </div>
+        )}
+        
+        <div className="new-section-container healthcare-section">
+          <div className="healthcare-types-grid">
+            {healthcareTypes.map((type) => (
+              <div key={type.id} className="new-item">
+                <button
+                  className={`new-item-button ${selectedHealthcareType === type.id ? "active" : ""}`}
+                  onClick={() => handleHealthcareTypeClick(type.id)}
+                  disabled={loadingHealthcare}
+                >
+                  <img
+                    src={type.image}
+                    alt={type.name}
+                    className="new-item-image"
+                    onError={handleImageError}
+                  />
+                  <div className="new-item-placeholder" style={{ display: "none" }}>
+                    {type.name.split(" ")[0]}
+                  </div>
+                </button>
+                <div className="new-item-label">{type.name}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -344,7 +459,7 @@ const handleBookAppointment = (facility) => {
                 ))}
               </div>
               <div className="see-more-container">
-                <button className="see-more-btn" onClick={handleSeeMore}>
+                <button className="see-more-btn-healthcare" onClick={handleSeeMore}>
                   See More
                 </button>
               </div>

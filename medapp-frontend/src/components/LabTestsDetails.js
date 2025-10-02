@@ -1,11 +1,16 @@
 // src/components/LabTestsDetails.js
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+
+
 import "./LabTestsDetails.css";
 
 const LabTestsDetails = () => {
-  const { category } = useParams();
+
   const navigate = useNavigate();
+  const { category: categoryParam } = useParams();
+  const location = useLocation();
+  const category = location.state?.category || categoryParam;
 
   // hooks - always at top level (moved here to avoid hook-order errors)
   const [tests, setTests] = useState([]);

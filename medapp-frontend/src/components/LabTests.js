@@ -28,22 +28,22 @@ const LabTests = () => {
     },
     {
       name: "Vitamins & Deficiencies",
-      image: "/images/vitamins.jpg",
+      image: "/images/vitamins.png",
       description: "Vitamin levels and deficiency tests"
     },
     {
       name: "Liver & Kidney",
-      image: "/images/liver-kidney.jpg",
+      image: "/images/liver&kidney.png",
       description: "Liver and kidney function tests"
     },
     {
       name: "Infectious Diseases",
-      image: "/images/infectious.jpg",
+      image: "/images/infectious.png",
       description: "Disease detection and screening"
     },
     {
       name: "Women's Health",
-      image: "/images/womens-health.jpg",
+      image: "/images/womenshealth.png",
       description: "Specialized tests for women"
     }
   ];

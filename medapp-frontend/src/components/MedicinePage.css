@@ -1,10 +1,13 @@
 .medicine-page {
   padding: 20px;
-  background: rgba(255, 255, 255, 0.9); /* 0.9 transparency */
+  background: rgba(255, 255, 255, 0.23);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  align-items: center;       /* centers all children horizontally */
+  justify-content: flex-start; /* keeps items at the top vertically */
 }
+
 
 /* Loading page - centered spinner */
 .medicine-page.loading-page {
@@ -41,16 +44,23 @@
   font-weight: 600;
 }
 
+/* PAGE HEADER - Controls title positioning */
+/* To center: use margin: 0 auto and text-align: center */
 .page-header {
   text-align: center;
   margin-bottom: 30px;
   width: 100%;
+  max-width: 100%; /* Full width for centering */
+  margin-left: auto; /* Centers the header */
+  margin-right: auto; /* Centers the header */
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 20px; /* Breathing room on sides */
 }
 
 .page-title {
+  text-align: center;
   font-size: 36px;
   font-weight: bold;
   color: #0b6835;
@@ -69,85 +79,98 @@
   font-weight: 500;
 }
 
-/* Main Layout - Centered content with sidebar */
+/* Main Layout - Controls overall page structure and positioning */
+/* justify-content: pushes content left/center/right */
+/* gap: controls space between medicine grid and filter sidebar */
 .medicine-layout {
   display: flex;
-  gap: 30px;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  justify-content: center;
+  justify-content: center; /* Centers content */
   align-items: flex-start;
+  gap: 80px; /* Space between grid and filter */
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+  padding: 0 10px; /* Equal padding on both sides */
 }
 
-/* Medicine content takes 55% of screen width */
+/* Medicine Content Container - Controls the medicine grid wrapper */
+/* max-width: limits how wide the medicine grid can get */
+/* margin-right: pushes the grid away from the filter box */
 .medicine-content {
-  width: 85%; /* change from 55% */
-  max-width: 1100px; /* optionally increase max-width */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  width: 100%;
+  max-width: 1500px; /* Increased for more horizontal space */
+  min-width: 0;
+  margin-right: 0; /* Reset margin */
 }
 
-
-/* Filter Sidebar - Compact, right-aligned */
+/* Filter Sidebar - Controls filter box position and size */
+/* flex: 0 0 XXpx - sets fixed width (change XXpx to adjust width) */
+/* position: sticky - makes it scroll with page */
+/* top: distance from top when scrolling */
+/* right: distance from right edge (use negative to pull more right) */
 .filter-sidebar {
-  width: 280px;
-  flex-shrink: 0;
-  display: flex;
-  justify-content: flex-start;
+  flex: 0 0 10px; /* Reduced width dramatically */
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+  max-height: calc(100vh - 140px);
+  z-index: 100;
+  margin-right: 0; /* Reset to keep in flow */
 }
 
 .filter-panel {
-  width: 100%;
+  width: 50%;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.1);
   border: 1px solid rgba(11, 104, 53, 0.1);
-  height: fit-content;
-  position: sticky;
-  top: 20px;
   backdrop-filter: blur(10px);
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .filter-panel h3 {
   color: #0b6835;
-  margin: 0 0 24px 0;
-  font-size: 20px;
+  margin: 0 0 12px 0;
+  font-size: 13px;
   font-weight: 700;
   text-align: center;
-  border-bottom: 3px solid #0b6835;
-  padding-bottom: 12px;
+  border-bottom: 2px solid #0b6835;
+  padding-bottom: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .filter-group {
-  margin-bottom: 24px;
+  margin-bottom: 10px;
 }
 
 .filter-group label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 4px;
+  font-size: 10px;
   font-weight: 600;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   color: #333;
 }
 
 .filter-group select {
   width: 100%;
-  padding: 12px 16px;
+  padding: 6px 8px;
   border: 2px solid #e9ecef;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 10px;
   background: white;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .filter-group select:focus {
@@ -159,40 +182,40 @@
 .filter-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .apply-filters-btn, .clear-filters-btn {
   width: 100%;
-  padding: 12px;
+  padding: 6px;
   border: none;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .apply-filters-btn {
   background: linear-gradient(135deg, #0b6835, #0e7a42);
   color: white;
-  box-shadow: 0 4px 15px rgba(11, 104, 53, 0.3);
+  box-shadow: 0 3px 12px rgba(11, 104, 53, 0.3);
 }
 
 .apply-filters-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(11, 104, 53, 0.4);
+  box-shadow: 0 5px 16px rgba(11, 104, 53, 0.4);
 }
 
 .clear-filters-btn {
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
   color: #0b6835;
   border: 2px solid #0b6835;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.05);
 }
 
 .clear-filters-btn:hover {
@@ -201,17 +224,21 @@
   transform: translateY(-2px);
 }
 
+/* Medicine Grid - Controls the 2-column layout */
+/* grid-template-columns: defines number of columns (repeat(2, 1fr) = 2 equal columns) */
+/* gap: space between cards */
 .medicine-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 40px; /* increase from 30px */
+  grid-template-columns: repeat(2, 1fr); /* 2 equal columns */
+  gap: 24px; /* Space between cards - increase for more spacing */
   width: 100%;
-  max-width: 100%; 
-  margin: 0 auto;
 }
 
-
-/* Medicine Card - Enhanced Design */
+/* Medicine Card - Individual card styling */
+/* padding: internal spacing inside card */
+/* gap: space between elements inside card (image, text, buttons) */
+/* min-height: minimum card height */
+/* border-radius: rounded corners */
 .medicine-card {
   background: linear-gradient(
     to bottom,
@@ -219,23 +246,19 @@
     rgba(11, 104, 53, 0.75) 50%,
     rgba(8, 80, 40, 0.75) 100%
   );
-  width: 70%;             /* fill the grid column */
-  max-width: 300px;        /* ensures cards have spacious width */
-  border-radius: 20px;
-  padding: 32px;
+  width: 100%;
+  border-radius: 20px; /* Rounded corners */
+  padding: 20px; /* Internal spacing */
   text-align: center;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: default;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(11, 104, 53, 0.2);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  gap: 1.5rem;
-  min-height: auto;
-  height: auto;
+  gap: 12px; /* Space between card elements */
+  min-height: 280px; /* Minimum card height */
 }
 
 .medicine-card::before {
@@ -250,7 +273,7 @@
 }
 
 .medicine-card:hover {
-  transform: translateY(-8px);
+  transform: translateY(-6px);
   box-shadow: 0 16px 48px rgba(11, 104, 53, 0.25);
 }
 
@@ -258,39 +281,44 @@
   opacity: 1;
 }
 
-/* Category Badge - Enhanced */
+/* Category Badge - Positioned on card */
+/* position: absolute with top/left controls exact placement */
+/* left/top: distance from card edges */
+/* z-index: higher number = appears on top of other elements */
+/* transform: use to adjust centering or offset */
 .medicine-category {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 52px; /* Distance from top of card (adjust to position on image) */
+  left: 20px; /* Distance from left edge of card */
   background: linear-gradient(135deg, rgba(11, 104, 53, 0.15), rgba(14, 122, 66, 0.2));
   color: #0b6835;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 14px;
+  font-size: 10px;
   font-weight: 700;
   border: 1px solid rgba(11, 104, 53, 0.3);
-  max-width: 140px;
+  max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   backdrop-filter: blur(10px);
-  z-index: 10;
+  z-index: 20; /* Higher than image container (10) */
 }
 
-/* Medicine Image Container - Enhanced */
+/* Medicine Image Container - Holds the medicine image */
+/* width/height: controls image area size */
+/* position: relative allows child elements to position absolutely within it */
 .medicine-img-container {
   width: 100%;
-  height: 160px;
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 18px;
   background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
-  position: relative;
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.05);
+  position: relative; /* Allows category badge to position on top */
+  z-index: 5; /* Lower than category badge */
 }
 
 .medicine-img {
@@ -305,11 +333,11 @@
   transform: scale(1.05);
 }
 
-/* Enhanced Placeholder for missing images */
+/* Placeholder for missing images */
 .medicine-img-placeholder {
-  width: 90px;
-  height: 90px;
-  border-radius: 16px;
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -331,55 +359,67 @@
   background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2));
 }
 
-/* Medicine Info - Structured Layout */
+/* Medicine Info - Compact with ellipsis */
 .medicine-info {
-  flex-grow: 1;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  text-align: left;
-  padding: 0 8px;
+  gap: 8px;
+  text-align: center;
 }
 
 .medicine-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: #0b6835;
-  margin: 0 0 12px 0;
+  margin: 0;
   line-height: 1.3;
-  min-height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
   background: linear-gradient(135deg, #0b6835, #0e7a42);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .medicine-generic {
-  font-size: 14px;
+  font-size: 13px;
   color: #fff;
   font-style: italic;
   margin: 0;
   line-height: 1.3;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .medicine-manufacturer {
-  font-size: 13px;
+  font-size: 12px;
   color: #fff;
   margin: 0;
   line-height: 1.3;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .medicine-composition {
-  font-size: 13px;
+  font-size: 12px;
   color: #fff;
   margin: 0;
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .medicine-composition strong {
@@ -388,36 +428,42 @@
 }
 
 .medicine-description {
-  font-size: 13px;
+  font-size: 12px;
   color: #fff;
   margin: 0;
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-/* Action Buttons - Enhanced */
+/* Action Buttons */
 .medicine-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
-  margin-top: 18px;
-  padding-top: 16px;
+  margin-top: auto;
+  padding-top: 12px;
   border-top: 2px solid rgba(11, 104, 53, 0.1);
 }
 
 .action-btn {
-  padding: 12px 18px;
+  padding: 10px 16px;
   border: none;
-  border-radius: 25px;
-  font-size: 13px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex: 1;
-  max-width: 120px;
+  max-width: 110px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   position: relative;
   overflow: hidden;
 }
@@ -445,7 +491,7 @@
 
 .view-btn:hover {
   background: linear-gradient(135deg, #0e7a42, #138c4f);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(11, 104, 53, 0.4);
 }
 
@@ -459,20 +505,24 @@
 .add-cart-btn:hover {
   background: linear-gradient(135deg, #0b6835, #0e7a42);
   color: white;
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(11, 104, 53, 0.3);
 }
 
-/* Loading State - Enhanced and Centered */
+/* Loading State */
 .loading-spinner {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: auto;
   font-size: 20px;
   color: #0b6835;
   gap: 24px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
 }
 
 .spinner {
@@ -484,9 +534,9 @@
   animation: spin 1s linear infinite;
 }
 
-/* Ensure text stays still */
 .loading-spinner p {
   margin: 0;
+  animation: none;
 }
 
 @keyframes spin {
@@ -494,7 +544,7 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Empty State - Enhanced */
+/* Empty State */
 .empty-state {
   text-align: center;
   padding: 100px 20px;
@@ -525,7 +575,7 @@
   margin-bottom: 20px;
 }
 
-/* Error State - Enhanced */
+/* Error State */
 .error {
   text-align: center;
   padding: 100px 20px;
@@ -569,7 +619,7 @@
   box-shadow: 0 8px 30px rgba(11, 104, 53, 0.4);
 }
 
-/* Pagination - Enhanced */
+/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -582,26 +632,27 @@
 }
 
 .pagination-btn {
-  padding: 12px 16px;
+  padding: 10px 14px;
   border: 2px solid #0b6835;
   background: linear-gradient(135deg, #fff, #f8f9fa);
   color: #0b6835;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 600;
-  min-width: 48px;
+  min-width: 44px;
   display: flex;
   align-items: center;
   gap: 6px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  font-size: 14px;
 }
 
 .pagination-btn:hover,
 .pagination-btn.active {
   background: linear-gradient(135deg, #0b6835, #0e7a42);
   color: white;
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(11, 104, 53, 0.3);
 }
 
@@ -613,13 +664,13 @@
 }
 
 .pagination-info {
-  margin: 0 20px;
+  margin: 0 16px;
   font-weight: 600;
   color: #0b6835;
-  font-size: 16px;
+  font-size: 15px;
   background: linear-gradient(135deg, rgba(11, 104, 53, 0.1), rgba(14, 122, 66, 0.15));
-  padding: 12px 20px;
-  border-radius: 25px;
+  padding: 10px 18px;
+  border-radius: 20px;
   border: 1px solid rgba(11, 104, 53, 0.2);
 }
 
@@ -630,52 +681,34 @@
 
 /* Responsive Design */
 @media (max-width: 1400px) {
-  .medicine-content {
-    width: 60%;
-  }
-  
-  .filter-sidebar {
-    width: 260px;
+  .medicine-layout {
+    gap: 20px;
   }
 }
 
 @media (max-width: 1200px) {
-  .medicine-content {
-    width: 65%;
-  }
-  
-  .filter-sidebar {
-    width: 240px;
-  }
-  
   .medicine-grid {
-    max-width: 700px;
-    gap: 25px;
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 992px) {
   .medicine-layout {
     flex-direction: column;
-    align-items: center;
+  }
+  
+  .filter-sidebar {
+    position: relative;
+    top: 0;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 500px;
+    max-height: none;
+    margin: 0 auto 20px;
   }
   
   .medicine-content {
     width: 100%;
-    max-width: 800px;
-  }
-  
-  .filter-sidebar {
-    width: 100%;
-    max-width: 800px;
-    order: -1;
-    margin-bottom: 30px;
-  }
-  
-  .filter-panel {
-    max-height: 300px;
-    position: static;
-    overflow-y: auto;
   }
 }
 
@@ -684,28 +717,8 @@
     padding: 16px;
   }
   
-  .medicine-grid {
-    gap: 24px;
-    max-width: 600px;
-  }
-  
   .medicine-card {
-    padding: 20px;
-  }
-  
-  .medicine-img-container {
-    height: 140px;
-    margin-bottom: 16px;
-  }
-  
-  .medicine-name {
-    font-size: 18px;
-    min-height: 48px;
-  }
-  
-  .action-btn {
-    font-size: 12px;
-    padding: 10px 14px;
+    padding: 18px;
   }
   
   .page-title {
@@ -715,21 +728,11 @@
 
 @media (max-width: 600px) {
   .medicine-grid {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-    gap: 20px;
-  }
-  
-  .medicine-card {
-    width: 100%;
+    gap: 18px;
   }
   
   .page-title {
     font-size: 28px;
-  }
-  
-  .filter-panel {
-    padding: 20px;
   }
 }
 
@@ -738,51 +741,15 @@
     padding: 12px;
   }
   
-  .medicine-grid {
-    max-width: 340px;
-  }
-  
   .medicine-card {
-    padding: 18px;
+    padding: 16px;
   }
   
   .medicine-img-container {
     height: 120px;
   }
   
-  .medicine-img-placeholder {
-    width: 70px;
-    height: 70px;
-    font-size: 20px;
-  }
-  
-  .medicine-name {
-    font-size: 16px;
-    min-height: 44px;
-  }
-  
-  .medicine-actions {
-    gap: 10px;
-  }
-  
-  .action-btn {
-    font-size: 11px;
-    padding: 10px 12px;
-    max-width: 110px;
-  }
-  
   .page-title {
     font-size: 24px;
   }
-
-  @media (max-width: 1200px) {
-  .medicine-content {
-    width: 75%; /* same as above */
-  }
-  
-  .medicine-grid {
-    gap: 30px; /* slightly smaller for mid screens */
-  }
-}
-
 }
