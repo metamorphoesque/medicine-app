@@ -19,12 +19,13 @@ app.use((req, res, next) => {
 
 // ---------------------- DATABASE ----------------------
 const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
-  host: process.env.DB_HOST || "localhost",
-  database: process.env.DB_NAME || "medicineapp",
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
+    connectionString: process.env.DATABASE_URL, // <- must come from env variable
+    ssl: {
+        rejectUnauthorized: false  // required for Render Postgres
+    }
 });
+
+module.exports = pool;
 
 pool.connect((err, client, release) => {
   if (err) console.error("DB connection error:", err.stack);
