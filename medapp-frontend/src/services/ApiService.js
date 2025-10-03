@@ -1,6 +1,5 @@
-
 // src/apiService.js
-const API_BASE = process.env.backend-eugy.onrender.com || "http://localhost:5000";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const ApiService = {
   getMedicines: async ({ page, limit, search, category }) => {
