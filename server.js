@@ -6,15 +6,11 @@ import { Pool } from "pg";
 import { categoryKeywords } from "./categories.js";
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // ---------------------- MIDDLEWARE ----------------------
 app.use(bodyParser.json());
-app.use(cors({
-  origin: "https://medapp-frontend.onrender.com",
-  credentials: true
-}));
-
+app.use(cors()); 
 // Add request logging for debugging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, req.query);
