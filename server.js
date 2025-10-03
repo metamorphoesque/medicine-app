@@ -11,7 +11,7 @@ const PORT = 5000;
 // ---------------------- MIDDLEWARE ----------------------
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: "https://medapp-frontend.onrender.com",
   credentials: true
 }));
 
