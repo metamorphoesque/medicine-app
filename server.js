@@ -2,7 +2,8 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import bcrypt from "bcrypt";
-import { Pool } from "pg";
+import pkg from "pg";
+const { Pool } = pkg;
 import { categoryKeywords } from "./categories.js";
 
 const app = express();
@@ -19,13 +20,11 @@ app.use((req, res, next) => {
 
 // ---------------------- DATABASE ----------------------
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL, // <- must come from env variable
-    ssl: {
-        rejectUnauthorized: false  // required for Render Postgres
-    }
+  connectionString: process.env.DATABASE_URL, // must come from env variable
+  ssl: {
+    rejectUnauthorized: false // required for Render Postgres
+  }
 });
-
-module.exports = pool;
 
 pool.connect((err, client, release) => {
   if (err) console.error("DB connection error:", err.stack);
