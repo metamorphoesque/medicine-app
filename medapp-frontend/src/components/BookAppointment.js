@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./BookAppointment.css";
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 const BookAppointment = () => {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState("");
@@ -56,36 +58,36 @@ const BookAppointment = () => {
     }
   }, [pincodeSearch]);
 
-  const handleTypeSelection = async (type) => {
-    setSelectedType(type);
-    setShowResults(false);
-    setFacilities([]);
+ const handleTypeSelection = async (type) => {
+  setSelectedType(type);
+  setShowResults(false);
+  setFacilities([]);
 
-    if (!type || !selectedState) return;
+  if (!type || !selectedState) return;
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-     let url = `http://localhost:5000/api/healthcare/byState?state=${selectedState}&type=${type}&limit=20`;
-      
-      // If pincode is provided, add it to the search
-      if (pincode.trim()) {
-        url += `&pincode=${pincode.trim()}`;
-      }
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      const facilitiesData = data.results || data;
-      setFacilities(facilitiesData);
-      setShowResults(true);
-    } catch (error) {
-      console.error("Error fetching facilities:", error);
-      setFacilities([]);
+  try {
+    let url = `${API_BASE}/api/healthcare/byState?state=${selectedState}&type=${type}&limit=20`;
+    
+    // If pincode is provided, add it to the search
+    if (pincode.trim()) {
+      url += `&pincode=${pincode.trim()}`;
     }
 
-    setLoading(false);
-  };
+    const response = await fetch(url);
+    const data = await response.json();
+
+    const facilitiesData = data.results || data;
+    setFacilities(facilitiesData);
+    setShowResults(true);
+  } catch (error) {
+    console.error("Error fetching facilities:", error);
+    setFacilities([]);
+  }
+
+  setLoading(false);
+};
 
   const handlePincodeInputChange = (e) => {
     const value = e.target.value;

@@ -15,6 +15,8 @@ import Wishlist from "./components/Wishlist";
 import Cart from './components/Cart';
 import "./App.css";
 
+
+
 // Search component to handle navigation
 function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");

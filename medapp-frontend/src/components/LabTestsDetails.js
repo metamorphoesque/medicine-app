@@ -1,9 +1,9 @@
 // src/components/LabTestsDetails.js
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-
-
 import "./LabTestsDetails.css";
+
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000"; 
 
 const LabTestsDetails = () => {
 
@@ -38,39 +38,39 @@ const LabTestsDetails = () => {
 
   // Fetch tests and packages from backend, defensive parsing
   const fetchTestsAndPackages = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  try {
+    setLoading(true);
+    setError("");
 
-      // fetch individual tests for this category
-      const testsUrl = `http://localhost:5000/api/lab-tests${category ? `?category=${encodeURIComponent(category)}` : ""}`;
-      const testsResponse = await fetch(testsUrl);
-      if (!testsResponse.ok) {
-        const txt = await testsResponse.text().catch(() => "Failed");
-        throw new Error(`Tests request failed: ${testsResponse.status} ${txt}`);
-      }
-      const testsData = await testsResponse.json();
-      // backend may return array or object; normalize to array
-      const testsArray = Array.isArray(testsData) ? testsData : testsData.results || testsData.items || [];
-      
-      // fetch packages
-      const packagesResponse = await fetch("http://localhost:5000/api/lab-packages");
-      if (!packagesResponse.ok) {
-        const txt = await packagesResponse.text().catch(() => "Failed");
-        throw new Error(`Packages request failed: ${packagesResponse.status} ${txt}`);
-      }
-      const packagesData = await packagesResponse.json();
-      const packagesArray = Array.isArray(packagesData) ? packagesData : packagesData.results || packagesData.items || [];
-
-      setTests(testsArray);
-      setPackages(packagesArray);
-    } catch (err) {
-      console.error("Error fetching lab tests/packages:", err);
-      setError(typeof err === "string" ? err : err.message || "Failed to load lab tests");
-    } finally {
-      setLoading(false);
+    // fetch individual tests for this category
+    const testsUrl = `${API_BASE}/api/lab-tests${category ? `?category=${encodeURIComponent(category)}` : ""}`;
+    const testsResponse = await fetch(testsUrl);
+    if (!testsResponse.ok) {
+      const txt = await testsResponse.text().catch(() => "Failed");
+      throw new Error(`Tests request failed: ${testsResponse.status} ${txt}`);
     }
-  };
+    const testsData = await testsResponse.json();
+    // backend may return array or object; normalize to array
+    const testsArray = Array.isArray(testsData) ? testsData : testsData.results || testsData.items || [];
+    
+    // fetch packages
+    const packagesResponse = await fetch(`${API_BASE}/api/lab-packages`);
+    if (!packagesResponse.ok) {
+      const txt = await packagesResponse.text().catch(() => "Failed");
+      throw new Error(`Packages request failed: ${packagesResponse.status} ${txt}`);
+    }
+    const packagesData = await packagesResponse.json();
+    const packagesArray = Array.isArray(packagesData) ? packagesData : packagesData.results || packagesData.items || [];
+
+    setTests(testsArray);
+    setPackages(packagesArray);
+  } catch (err) {
+    console.error("Error fetching lab tests/packages:", err);
+    setError(typeof err === "string" ? err : err.message || "Failed to load lab tests");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleBookAppointment = (testId, testName) => {
     console.log(`Booking appointment for test: ${testName} (ID: ${testId})`);

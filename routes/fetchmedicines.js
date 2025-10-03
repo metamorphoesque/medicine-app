@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 
 // Map frontend category slugs to backend category slugs
 const categorySlugMapping = {

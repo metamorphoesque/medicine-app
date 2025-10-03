@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 // Phone SVG Icon Component
 const PhoneIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -21,6 +23,7 @@ const Home = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [currentLabTestIndex, setCurrentLabTestIndex] = useState(0);
   const [showLocationError, setShowLocationError] = useState(false);
+  
 
   const scrollRef = useRef(null);
   const bannerScrollRef = useRef(null);
@@ -175,46 +178,46 @@ const Home = () => {
     }
   };
 
-  const searchHealthcare = async (location, type) => {
-    try {
-      setLoadingHealthcare(true);
-      const response = await fetch(
-        `http://localhost:5000/api/healthcare/nearby?lat=${location.lat}&lng=${location.lng}&type=${type}&radius=50`
-      );
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      setHealthcareResults(data.slice(0, 4) || []);
-      setShowHealthcareResults(true);
-    } catch (error) {
-      console.error("Error fetching healthcare facilities:", error);
-      setHealthcareResults([]);
-      setShowHealthcareResults(true);
-    } finally {
-      setLoadingHealthcare(false);
-    }
-  };
+ const searchHealthcare = async (location, type) => {
+  try {
+    setLoadingHealthcare(true);
+    const response = await fetch(
+      `${API_BASE}/api/healthcare/nearby?lat=${location.lat}&lng=${location.lng}&type=${type}&radius=50`
+    );
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    setHealthcareResults(data.slice(0, 4) || []);
+    setShowHealthcareResults(true);
+  } catch (error) {
+    console.error("Error fetching healthcare facilities:", error);
+    setHealthcareResults([]);
+    setShowHealthcareResults(true);
+  } finally {
+    setLoadingHealthcare(false);
+  }
+};
 
-  const searchHealthcareByState = async (state, type) => {
-    try {
-      setLoadingHealthcare(true);
-      const url = `http://localhost:5000/api/healthcare/byState?state=${encodeURIComponent(state)}&type=${type}&limit=4`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setHealthcareResults(data.results || []);
-      setShowHealthcareResults(true);
-    } catch (error) {
-      console.error("Error fetching healthcare by state:", error);
-      setHealthcareResults([]);
-      setShowHealthcareResults(true);
-    } finally {
-      setLoadingHealthcare(false);
+ const searchHealthcareByState = async (state, type) => {
+  try {
+    setLoadingHealthcare(true);
+    const url = `${API_BASE}/api/healthcare/byState?state=${encodeURIComponent(state)}&type=${type}&limit=4`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Error response:", errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+    const data = await response.json();
+    setHealthcareResults(data.results || []);
+    setShowHealthcareResults(true);
+  } catch (error) {
+    console.error("Error fetching healthcare by state:", error);
+    setHealthcareResults([]);
+    setShowHealthcareResults(true);
+  } finally {
+    setLoadingHealthcare(false);
+  }
+};
 
   const handleHealthcareTypeClick = async (type) => {
     // Check if Current Location is selected but location not available
