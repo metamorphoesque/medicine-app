@@ -1,0 +1,140 @@
+.seller-dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: 80vh;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(11, 104, 53, 0.2);
+  border-top-color: #0b6835;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-section h1 {
+  color: #0b6835;
+  margin: 0 0 10px 0;
+  font-size: 32px;
+}
+
+.welcome-section p {
+  color: #666;
+  margin: 0;
+  font-size: 16px;
+}
+
+.verification-badge {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.verification-badge.verified {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.view-all-btn {
+  background: none;
+  border: none;
+  color: #0b6835;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.view-all-btn:hover {
+  text-decoration: underline;
+}
+
+.recent-inventory-section {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 2px solid #eee;
+  color: #666;
+  font-weight: 600;
+}
+
+.inventory-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.medicine-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.medicine-cell strong {
+  color: #333;
+}
+
+.medicine-cell small {
+  color: #666;
+  font-size: 13px;
+}
+
+.stat-card.warning {
+  border-left: 4px solid #f57c00;
+}
+
+.stat-card.danger {
+  border-left: 4px solid #c62828;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}

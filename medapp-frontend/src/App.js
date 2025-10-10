@@ -1,4 +1,5 @@
 // src/App.js
+
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import Home from "./components/Home";
@@ -11,11 +12,13 @@ import MedicineDetailsPage from "./components/MedicineDetailsPage";
 import BookAppointmentDetailsPage from './BookAppointmentDetailsPage';
 import SignUp from "./components/SignUp";
 import { WishlistProvider } from "./components/Wishlist";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Wishlist from "./components/Wishlist";
 import Cart from './components/Cart';
+import SellerDashboard from './components/SellerDashboard';
+import SellerInventory from './components/SellerInventory';
+import SellerAddInventory from './components/SellerAddInventory';
 import "./App.css";
-
-
 
 // Search component to handle navigation
 function SearchBar() {
@@ -49,10 +52,46 @@ function SearchBar() {
   );
 }
 
-// Floating Action Buttons component
+// Floating Action Buttons component - now role-aware
 function FloatingButtons() {
   const navigate = useNavigate();
+  const { user, isSeller } = useAuth();
 
+  // Seller FABs
+  if (isSeller()) {
+    return (
+      <div className="floating-buttons">
+        <div className="fab-container" onClick={() => navigate('/seller/inventory')} title="Add Medicine">
+          <div className="fab-btn seller-fab">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+          </div>
+          <span className="fab-label">Add Medicine</span>
+        </div>
+
+        <div className="fab-container" onClick={() => navigate('/seller/orders')} title="Orders">
+          <div className="fab-btn seller-fab">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3H5c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+            </svg>
+          </div>
+          <span className="fab-label">Orders</span>
+        </div>
+
+        <div className="fab-container" onClick={() => navigate('/seller/dashboard')} title="Dashboard">
+          <div className="fab-btn seller-fab">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+          </div>
+          <span className="fab-label">Dashboard</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Buyer FABs (default)
   return (
     <div className="floating-buttons">
       <div className="fab-container" onClick={() => navigate('/cart')} title="Cart">
@@ -100,70 +139,116 @@ function Footer() {
   );
 }
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+// Main App Content (needs access to auth context)
+function AppContent() {
+  const { user, isLoggedIn, isSeller, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
-    <WishlistProvider>
-      <Router>
-        <div 
-          className="app"
-          style={{
-            backgroundImage: 'url(/images/Background1.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
-            minHeight: '100vh'
-          }}
-        >
-          {/* Top green header with search and sign up button */}
-          <header className="top-header">
-            <SearchBar />
-            <Link to="/signup" className="auth-link-btn">
-              SIGN UP
-            </Link>
-          </header>
+    <div 
+      className="app"
+      style={{
+        backgroundImage: 'url(/images/Background1.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        minHeight: '100vh'
+      }}
+    >
+      {/* Top green header with search and sign up button */}
+      <header className="top-header">
+        <SearchBar />
+        {isLoggedIn() ? (
+          <div className="user-menu">
+            <span className="username">{user?.username}</span>
+            <button onClick={handleLogout} className="auth-link-btn">
+              LOG OUT
+            </button>
+          </div>
+        ) : (
+          <Link to="/signup" className="auth-link-btn">
+            SIGN UP
+          </Link>
+        )}
+      </header>
 
-          {/* Navigation bar */}
-          <nav className="nav-bar">
-            <div className="nav-links">
+      {/* Navigation bar - changes based on role */}
+      <nav className="nav-bar">
+        <div className="nav-links">
+          {isSeller() ? (
+            <>
+              <Link to="/seller/dashboard" className="nav-link">DASHBOARD</Link>
+              <Link to="/seller/inventory" className="nav-link">MY INVENTORY</Link>
+              <Link to="/seller/orders" className="nav-link">ORDERS</Link>
+              <Link to="/seller/analytics" className="nav-link">ANALYTICS</Link>
+              <Link to="/profile" className="nav-link">PROFILE</Link>
+            </>
+          ) : (
+            <>
               <Link to="/" className="nav-link">HOME</Link>
               <Link to="/book-appointment" className="nav-link">BOOK AN APPOINTMENT</Link>
               <Link to="/lab-tests" className="nav-link">LAB TESTS</Link>
-              {isLoggedIn ? (
+              {isLoggedIn() ? (
                 <Link to="/profile" className="nav-link">PROFILE</Link>
               ) : (
                 <Link to="/signup" className="nav-link">SIGN IN / SIGN UP</Link>
               )}
-            </div>
-          </nav>
-
-          {/* Page content */}
-          <div className="page-container">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/book-appointment" element={<BookAppointment />} />
-              <Route path="/lab-tests" element={<LabTests />} />
-              <Route path="/lab-tests/:category" element={<LabTestsDetails />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
-              <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />
-              <Route path="/facility-details" element={<BookAppointmentDetailsPage />} />
-              <Route path="/lab-tests/:category" element={<LabTests />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/signup" element={<SignUp onLoginSuccess={() => setIsLoggedIn(true)} />} />
-            </Routes>
-          </div>
-
-          {/* Footer */}
-          <Footer />
-
-          {/* Global Floating Action Buttons */}
-          <FloatingButtons />
+            </>
+          )}
         </div>
-      </Router>
-    </WishlistProvider>
+      </nav>
+
+      {/* Page content */}
+      <div className="page-container">
+       {/* Page content */}
+<div className="page-container">
+  <Routes>
+    {/* Public routes */}
+    <Route path="/" element={<Home />} />
+    <Route path="/signup" element={<SignUp />} />
+    
+    {/* Buyer routes */}
+    <Route path="/book-appointment" element={<BookAppointment />} />
+    <Route path="/lab-tests" element={<LabTests />} />
+    <Route path="/lab-tests/:category" element={<LabTestsDetails />} />
+    <Route path="/cart" element={<Cart />} />
+    <Route path="/profile" element={<Profile />} />
+    <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
+    <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />
+    <Route path="/facility-details" element={<BookAppointmentDetailsPage />} />
+    <Route path="/wishlist" element={<Wishlist />} />
+    
+    {/* Seller routes */}
+    <Route path="/seller/dashboard" element={<SellerDashboard />} />
+    <Route path="/seller/inventory" element={<SellerInventory />} />
+    <Route path="/seller/inventory/add" element={<SellerAddInventory />} />
+    <Route path="/seller/orders" element={<div style={{padding: '40px', textAlign: 'center'}}>Orders Management - Coming Soon</div>} />
+    <Route path="/seller/analytics" element={<div style={{padding: '40px', textAlign: 'center'}}>Analytics - Coming Soon</div>} />
+  </Routes>
+</div>
+      </div>
+
+      {/* Footer */}
+      <Footer />
+
+      {/* Global Floating Action Buttons */}
+      <FloatingButtons />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <WishlistProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </WishlistProvider>
+    </AuthProvider>
   );
 }
 

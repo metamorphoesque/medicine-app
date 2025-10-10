@@ -1,10 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config(); 
+
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import pkg from "pg";
-const { Pool } = pkg;
 import { categoryKeywords } from "./categories.js";
+const { Pool } = pkg;
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -19,12 +23,17 @@ app.use((req, res, next) => {
 });
 
 // ---------------------- DATABASE ----------------------
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // must come from env variable
-  ssl: {
-    rejectUnauthorized: false // required for Render Postgres
-  }
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+  ssl: false, // disable SSL for localhost
 });
+
+export default pool;
 
 pool.connect((err, client, release) => {
   if (err) console.error("DB connection error:", err.stack);
@@ -87,48 +96,476 @@ function buildCategorySearchQuery(keywords) {
   };
 }
 
-// ---------------------- USER AUTH ----------------------
-app.post("/api/register", async (req, res) => {
+// ---------------------- ENHANCED USER AUTH ----------------------
+
+// Register as Buyer
+app.post("/api/register/buyer", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, fullName, dateOfBirth } = req.body;
+    
     if (!username || !email || !password) {
       return res.status(400).json({ error: "All fields required" });
     }
 
+    // Check if email exists
     const exists = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (exists.rows.length) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
+    // Validate age (must be 18+)
+    if (dateOfBirth) {
+      const today = new Date();
+      const birth = new Date(dateOfBirth);
+      const age = today.getFullYear() - birth.getFullYear();
+      if (age < 18) {
+        return res.status(400).json({ error: "You must be 18 or older to register" });
+      }
+    }
+
+    // Hash password
     const hash = await bcrypt.hash(password, 10);
+    
+    // Insert user
     const result = await pool.query(
-      "INSERT INTO users (username, email, password_hash) VALUES ($1,$2,$3) RETURNING id, username, email",
-      [username, email, hash]
+      `INSERT INTO users (username, email, password_hash, user_role, full_name, date_of_birth) 
+       VALUES ($1, $2, $3, 'buyer', $4, $5) 
+       RETURNING id, username, email, user_role`,
+      [username, email, hash, fullName || null, dateOfBirth || null]
     );
-    res.status(201).json({ message: "User registered", userId: result.rows[0].id });
+
+    res.status(201).json({ 
+      message: "Buyer registered successfully", 
+      user: result.rows[0]
+    });
   } catch (err) {
-    console.error(err);
+    console.error('Buyer registration error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
+// Register as Seller
+app.post("/api/register/seller", async (req, res) => {
+  try {
+    const { 
+      username, 
+      email, 
+      password, 
+      businessName, 
+      licenseNumber,
+      gstin,
+      address,
+      phone 
+    } = req.body;
+    
+    if (!username || !email || !password || !businessName || !licenseNumber) {
+      return res.status(400).json({ 
+        error: "Username, email, password, business name, and license number are required" 
+      });
+    }
+
+    // Check if email exists
+    const exists = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (exists.rows.length) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    // Hash password
+    const hash = await bcrypt.hash(password, 10);
+    
+    // Start transaction
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Create seller record first
+      const sellerResult = await client.query(
+        `INSERT INTO sellers (name, business_name, license_number, gstin, address, phone, email, verification_status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending') 
+         RETURNING id`,
+        [businessName, businessName, licenseNumber, gstin || null, address || null, phone || null, email]
+      );
+      
+      const sellerId = sellerResult.rows[0].id;
+      
+      // Create user record linked to seller
+      const userResult = await client.query(
+        `INSERT INTO users (username, email, password_hash, user_role, seller_id) 
+         VALUES ($1, $2, $3, 'seller', $4) 
+         RETURNING id, username, email, user_role, seller_id`,
+        [username, email, hash, sellerId]
+      );
+      
+      await client.query('COMMIT');
+      
+      res.status(201).json({ 
+        message: "Seller registered successfully. Your account is pending verification.", 
+        user: userResult.rows[0],
+        sellerStatus: 'pending'
+      });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Seller registration error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Unified Login with Role Detection
+// In your server.js, replace the login endpoint:
+
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
+
+    // Fetch user with seller info if applicable
+    const result = await pool.query(`
+      SELECT u.*, s.verification_status as seller_verification_status,
+             s.business_name, s.id as seller_id_from_table
+      FROM users u
+      LEFT JOIN sellers s ON u.seller_id = s.id
+      WHERE u.email = $1
+    `, [email]);
+
     if (!result.rows.length) {
       return res.status(400).json({ error: "User not found" });
     }
 
     const user = result.rows[0];
+    
+    // Check password
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
-    res.json({ message: "Login successful", userId: user.id });
+    // TEMPORARILY ALLOW UNVERIFIED SELLERS TO LOGIN
+    // Comment out this block to skip verification check
+    /*
+    if (user.user_role === 'seller' && user.seller_verification_status !== 'verified') {
+      return res.status(403).json({ 
+        error: "Your seller account is pending verification. Please wait for admin approval.",
+        status: 'pending_verification'
+      });
+    }
+    */
+
+    // Return user data
+    res.json({ 
+      message: "Login successful", 
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.user_role,
+        sellerId: user.seller_id || user.seller_id_from_table,
+        businessName: user.business_name,
+        verificationStatus: user.seller_verification_status || 'pending'
+      }
+    });
   } catch (err) {
-    console.error(err);
+    console.error('Login error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get seller verification status
+app.get("/api/seller/status/:sellerId", async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    
+    const result = await pool.query(`
+      SELECT verification_status, business_name, license_number, created_at, verified_at
+      FROM sellers
+      WHERE id = $1
+    `, [sellerId]);
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Seller not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching seller status:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- SELLER INVENTORY MANAGEMENT ----------------------
+
+// Get seller's inventory
+app.get("/api/seller/:sellerId/inventory", async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const { search, page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT sm.id, sm.price, sm.stock, sm.created_at, sm.updated_at,
+             m.id as medicine_id, m.name, m.generic, m.composition, 
+             m.manufacturer_name, m.image_url, m.prescription_required,
+             c.name as category_name
+      FROM seller_medicines sm
+      JOIN medicines m ON sm.medicine_id = m.id
+      LEFT JOIN categories c ON m.category = c.id
+      WHERE sm.seller_id = $1
+    `;
+    const params = [sellerId];
+
+    if (search && search.trim() !== '') {
+      params.push(`%${search.trim()}%`);
+      query += ` AND (m.name ILIKE $${params.length} OR m.generic ILIKE $${params.length})`;
+    }
+
+    query += ` ORDER BY sm.updated_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(parseInt(limit), offset);
+
+    const result = await pool.query(query, params);
+
+    // Get total count
+    let countQuery = `
+      SELECT COUNT(*) as total
+      FROM seller_medicines sm
+      JOIN medicines m ON sm.medicine_id = m.id
+      WHERE sm.seller_id = $1
+    `;
+    const countParams = [sellerId];
+
+    if (search && search.trim() !== '') {
+      countParams.push(`%${search.trim()}%`);
+      countQuery += ` AND (m.name ILIKE $${countParams.length} OR m.generic ILIKE $${countParams.length})`;
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].total);
+
+    res.json({
+      inventory: result.rows,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: parseInt(limit)
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching seller inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Add medicine to seller's inventory
+app.post("/api/seller/:sellerId/inventory", async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const { medicine_id, price, stock } = req.body;
+
+    if (!medicine_id || price === undefined || stock === undefined) {
+      return res.status(400).json({ 
+        error: "medicine_id, price, and stock are required" 
+      });
+    }
+
+    // Check if already exists
+    const existing = await pool.query(
+      "SELECT * FROM seller_medicines WHERE seller_id = $1 AND medicine_id = $2",
+      [sellerId, medicine_id]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ 
+        error: "This medicine is already in your inventory" 
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO seller_medicines (seller_id, medicine_id, price, stock)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [sellerId, medicine_id, price, stock]
+    );
+
+    res.status(201).json({
+      message: "Medicine added to inventory",
+      item: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error adding to inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update inventory item (price/stock)
+app.put("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
+  try {
+    const { sellerId, itemId } = req.params;
+    const { price, stock } = req.body;
+
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+
+    if (price !== undefined) {
+      updates.push(`price = $${paramCount}`);
+      values.push(price);
+      paramCount++;
+    }
+
+    if (stock !== undefined) {
+      updates.push(`stock = $${paramCount}`);
+      values.push(stock);
+      paramCount++;
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(sellerId, itemId);
+
+    const query = `
+      UPDATE seller_medicines 
+      SET ${updates.join(', ')}
+      WHERE seller_id = $${paramCount} AND id = $${paramCount + 1}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Inventory item not found" });
+    }
+
+    res.json({
+      message: "Inventory updated",
+      item: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error updating inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete from inventory
+app.delete("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
+  try {
+    const { sellerId, itemId } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM seller_medicines WHERE seller_id = $1 AND id = $2 RETURNING *",
+      [sellerId, itemId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Inventory item not found" });
+    }
+
+    res.json({ message: "Item removed from inventory" });
+  } catch (err) {
+    console.error('Error deleting from inventory:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Search medicines to add to inventory
+app.get("/api/seller/:sellerId/search-medicines", async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const { search, page = 1, limit = 20 } = req.query;
+    const offset = (page - 1) * limit;
+
+    if (!search || search.trim() === '') {
+      return res.json({ medicines: [], pagination: { totalItems: 0 } });
+    }
+
+    const searchParam = `%${search.trim()}%`;
+    
+    // Find medicines NOT in seller's inventory
+    const query = `
+      SELECT m.*, c.name as category_name,
+             COALESCE(m.manufacturer_name, m.generic, 'Unknown') as manufacturer_name
+      FROM medicines m
+      LEFT JOIN categories c ON m.category = c.id
+      WHERE (m.name ILIKE $1 OR m.generic ILIKE $1 OR m.composition ILIKE $1)
+      AND m.id NOT IN (
+        SELECT medicine_id FROM seller_medicines WHERE seller_id = $2
+      )
+      ORDER BY m.name ASC
+      LIMIT $3 OFFSET $4
+    `;
+
+    const result = await pool.query(query, [searchParam, sellerId, parseInt(limit), offset]);
+
+    // Get count
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM medicines m
+      WHERE (m.name ILIKE $1 OR m.generic ILIKE $1 OR m.composition ILIKE $1)
+      AND m.id NOT IN (
+        SELECT medicine_id FROM seller_medicines WHERE seller_id = $2
+      )
+    `;
+
+    const countResult = await pool.query(countQuery, [searchParam, sellerId]);
+    const total = parseInt(countResult.rows[0].total);
+
+    res.json({
+      medicines: result.rows,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        totalItems: total,
+        itemsPerPage: parseInt(limit)
+      }
+    });
+  } catch (err) {
+    console.error('Error searching medicines:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get seller dashboard stats
+app.get("/api/seller/:sellerId/stats", async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+
+    // Get total products
+    const productsResult = await pool.query(
+      "SELECT COUNT(*) as total FROM seller_medicines WHERE seller_id = $1",
+      [sellerId]
+    );
+
+    // Get low stock items (stock < 10)
+    const lowStockResult = await pool.query(
+      "SELECT COUNT(*) as total FROM seller_medicines WHERE seller_id = $1 AND stock < 10",
+      [sellerId]
+    );
+
+    // Get out of stock items
+    const outOfStockResult = await pool.query(
+      "SELECT COUNT(*) as total FROM seller_medicines WHERE seller_id = $1 AND stock = 0",
+      [sellerId]
+    );
+
+    res.json({
+      totalProducts: parseInt(productsResult.rows[0].total),
+      lowStock: parseInt(lowStockResult.rows[0].total),
+      outOfStock: parseInt(outOfStockResult.rows[0].total),
+      totalOrders: 0, // Placeholder for future orders feature
+      pendingOrders: 0,
+      revenue: 0
+    });
+  } catch (err) {
+    console.error('Error fetching seller stats:', err);
     res.status(500).json({ error: err.message });
   }
 });
