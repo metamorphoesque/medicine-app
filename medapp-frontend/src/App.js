@@ -21,14 +21,24 @@ import SellerAddInventory from './components/SellerAddInventory';
 import "./App.css";
 
 // Search component to handle navigation
+// Replace the SearchBar component in App.js with this updated version
+
 function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  const { isSeller } = useAuth();
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/medicines/category/all?search=${encodeURIComponent(searchTerm.trim())}`);
+      // Route based on user role
+      if (isSeller()) {
+        // Sellers go to Add Inventory page with search
+        navigate(`/seller/inventory/add?search=${encodeURIComponent(searchTerm.trim())}`);
+      } else {
+        // Buyers go to Medicine Page with search
+        navigate(`/medicines/category/all?search=${encodeURIComponent(searchTerm.trim())}`);
+      }
     }
   };
 
@@ -38,7 +48,7 @@ function SearchBar() {
         <input
           type="text"
           className="search-bar"
-          placeholder="Search medicines, categories..."
+          placeholder={isSeller() ? "Search medicines to add to inventory..." : "Search medicines, categories..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -51,7 +61,6 @@ function SearchBar() {
     </div>
   );
 }
-
 // Floating Action Buttons component - now role-aware
 function FloatingButtons() {
   const navigate = useNavigate();

@@ -115,7 +115,11 @@ const SellerInventory = () => {
           className="add-medicine-btn"
           onClick={() => navigate('/seller/inventory/add')}
         >
-          ➕ Add Medicine
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add Medicine
         </button>
       </div>
 
@@ -205,14 +209,21 @@ const SellerInventory = () => {
                           <button 
                             className="btn-save"
                             onClick={() => handleSaveEdit(item.id)}
+                            title="Save"
                           >
-                            ✓
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
                           </button>
                           <button 
                             className="btn-cancel"
                             onClick={handleCancelEdit}
+                            title="Cancel"
                           >
-                            ✗
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <line x1="18" y1="6" x2="6" y2="18"/>
+                              <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
                           </button>
                         </>
                       ) : (
@@ -220,14 +231,24 @@ const SellerInventory = () => {
                           <button 
                             className="btn-edit"
                             onClick={() => handleEdit(item)}
+                            title="Edit"
                           >
-                            ✎
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
                           </button>
                           <button 
                             className="btn-delete"
                             onClick={() => handleDelete(item.id, item.name)}
+                            title="Delete"
                           >
-                            🗑
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                              <line x1="10" y1="11" x2="10" y2="17"/>
+                              <line x1="14" y1="11" x2="14" y2="17"/>
+                            </svg>
                           </button>
                         </>
                       )}
@@ -240,7 +261,11 @@ const SellerInventory = () => {
         </div>
       ) : (
         <div className="empty-state">
-          <div className="empty-icon">📦</div>
+          <div className="empty-icon">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
           <h3>No Inventory Items</h3>
           <p>Start building your inventory by adding medicines</p>
           <button 

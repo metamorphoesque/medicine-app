@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './SellerAddInventory.css';
 
@@ -8,12 +8,13 @@ const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const SellerAddInventory = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
-  const [formData, setFormData] =useState({ price: '', stock: '' });
+  const [formData, setFormData] = useState({ price: '', stock: '' });
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -23,19 +24,31 @@ const SellerAddInventory = () => {
     }
   }, [user, navigate]);
 
+  // Handle search from URL parameter (when coming from global search)
+  useEffect(() => {
+    const searchFromUrl = searchParams.get('search');
+    if (searchFromUrl) {
+      setSearchTerm(searchFromUrl);
+      searchMedicines(searchFromUrl);
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (searchTerm.trim().length >= 2) {
-      searchMedicines();
+      const timeoutId = setTimeout(() => {
+        searchMedicines(searchTerm);
+      }, 300); // Debounce search
+      return () => clearTimeout(timeoutId);
     } else {
       setSearchResults([]);
     }
   }, [searchTerm]);
 
-  const searchMedicines = async () => {
+  const searchMedicines = async (term = searchTerm) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${API_BASE}/api/seller/${user.sellerId}/search-medicines?search=${encodeURIComponent(searchTerm)}`
+        `${API_BASE}/api/seller/${user.sellerId}/search-medicines?search=${encodeURIComponent(term)}`
       );
       
       if (response.ok) {
@@ -52,7 +65,6 @@ const SellerAddInventory = () => {
   const handleSelectMedicine = (medicine) => {
     setSelectedMedicine(medicine);
     setSearchResults([]);
-    setSearchTerm('');
   };
 
   const handleAddToInventory = async (e) => {
@@ -114,7 +126,10 @@ const SellerAddInventory = () => {
           className="back-btn"
           onClick={() => navigate('/seller/inventory')}
         >
-          ← Back to Inventory
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          </svg>
+          Back to Inventory
         </button>
         <h1>Add Medicine to Inventory</h1>
       </div>
@@ -143,27 +158,51 @@ const SellerAddInventory = () => {
                     className="medicine-result-card"
                     onClick={() => handleSelectMedicine(medicine)}
                   >
-                    <div className="medicine-image-small">
+                    {/* Category Badge */}
+                    {medicine.category_name && (
+                      <div className="category-badge">
+                        {medicine.category_name}
+                      </div>
+                    )}
+
+                    {/* Medicine Image */}
+                    <div className="medicine-image-container">
                       {medicine.image_url ? (
-                        <img src={medicine.image_url} alt={medicine.name} />
-                      ) : (
-                        <div 
-                          className="placeholder-small"
-                          style={{ backgroundColor: getPlaceholderColor(medicine.name) }}
-                        >
-                          {medicine.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                        <img 
+                          src={medicine.image_url} 
+                          alt={medicine.name}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div 
+                        className="placeholder-image" 
+                        style={{ 
+                          display: medicine.image_url ? 'none' : 'flex',
+                          backgroundColor: getPlaceholderColor(medicine.name)
+                        }}
+                      >
+                        {medicine.name.charAt(0).toUpperCase()}
+                      </div>
                     </div>
+
+                    {/* Medicine Info */}
                     <div className="medicine-result-info">
                       <h3>{medicine.name}</h3>
-                      {medicine.generic && <p className="generic-name">{medicine.generic}</p>}
-                      <p className="manufacturer">{medicine.manufacturer_name}</p>
-                      {medicine.category_name && (
-                        <span className="category-badge">{medicine.category_name}</span>
+                      {medicine.generic && <p className="generic-name">Generic: {medicine.generic}</p>}
+                      {medicine.manufacturer_name && (
+                        <p className="manufacturer">By {medicine.manufacturer_name}</p>
                       )}
                     </div>
-                    <div className="select-icon">→</div>
+
+                    {/* Select Icon */}
+                    <div className="select-icon">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                      </svg>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -207,7 +246,9 @@ const SellerAddInventory = () => {
                   {selectedMedicine.generic && (
                     <p className="generic-name">Generic: {selectedMedicine.generic}</p>
                   )}
-                  <p className="manufacturer">Manufacturer: {selectedMedicine.manufacturer_name}</p>
+                  {selectedMedicine.manufacturer_name && (
+                    <p className="manufacturer">Manufacturer: {selectedMedicine.manufacturer_name}</p>
+                  )}
                   {selectedMedicine.category_name && (
                     <span className="category-badge">{selectedMedicine.category_name}</span>
                   )}

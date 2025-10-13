@@ -80,7 +80,11 @@ const SellerDashboard = () => {
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon products">📦</div>
+          <div className="stat-icon products">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0b6835" strokeWidth="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
           <div className="stat-content">
             <h3>{stats.totalProducts}</h3>
             <p>Total Products</p>
@@ -88,7 +92,13 @@ const SellerDashboard = () => {
         </div>
         
         <div className="stat-card warning">
-          <div className="stat-icon low-stock">⚠️</div>
+          <div className="stat-icon low-stock">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f57c00" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
           <div className="stat-content">
             <h3>{stats.lowStock}</h3>
             <p>Low Stock Items</p>
@@ -96,7 +106,13 @@ const SellerDashboard = () => {
         </div>
         
         <div className="stat-card danger">
-          <div className="stat-icon out-stock">🚫</div>
+          <div className="stat-icon out-stock">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c62828" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
           <div className="stat-content">
             <h3>{stats.outOfStock}</h3>
             <p>Out of Stock</p>
@@ -104,7 +120,12 @@ const SellerDashboard = () => {
         </div>
         
         <div className="stat-card">
-          <div className="stat-icon revenue">💰</div>
+          <div className="stat-icon revenue">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0b6835" strokeWidth="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
           <div className="stat-content">
             <h3>${stats.revenue.toFixed(2)}</h3>
             <p>Total Revenue</p>
@@ -120,7 +141,12 @@ const SellerDashboard = () => {
             className="action-card"
             onClick={() => navigate('/seller/inventory/add')}
           >
-            <div className="action-icon">➕</div>
+            <div className="action-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
             <h3>Add New Medicine</h3>
             <p>Add products to your inventory</p>
           </button>
@@ -129,7 +155,13 @@ const SellerDashboard = () => {
             className="action-card"
             onClick={() => navigate('/seller/inventory')}
           >
-            <div className="action-icon">📊</div>
+            <div className="action-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+              </svg>
+            </div>
             <h3>Manage Inventory</h3>
             <p>Update stock and prices</p>
           </button>
@@ -138,7 +170,12 @@ const SellerDashboard = () => {
             className="action-card"
             onClick={() => navigate('/seller/orders')}
           >
-            <div className="action-icon">📦</div>
+            <div className="action-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+              </svg>
+            </div>
             <h3>View Orders</h3>
             <p>Manage customer orders</p>
           </button>
@@ -147,7 +184,13 @@ const SellerDashboard = () => {
             className="action-card"
             onClick={() => navigate('/seller/analytics')}
           >
-            <div className="action-icon">📈</div>
+            <div className="action-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+            </div>
             <h3>View Analytics</h3>
             <p>Track your performance</p>
           </button>
@@ -222,9 +265,27 @@ const SellerDashboard = () => {
         <h3>Need Help?</h3>
         <p>Check out our seller guide or contact support for assistance.</p>
         <div className="help-links">
-          <button className="help-link">📖 Seller Guide</button>
-          <button className="help-link">💬 Contact Support</button>
-          <button className="help-link">❓ FAQs</button>
+          <button className="help-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            Seller Guide
+          </button>
+          <button className="help-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Contact Support
+          </button>
+          <button className="help-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            FAQs
+          </button>
         </div>
       </div>
     </div>
