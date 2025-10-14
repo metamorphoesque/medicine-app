@@ -890,6 +890,521 @@ app.get("/api/seller-medicines", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ---------------------- PRESCRIPTIONS ----------------------
+
+// Upload prescription
+app.post("/api/prescriptions", async (req, res) => {
+  try {
+    const { 
+      user_id, 
+      doctor_name, 
+      doctor_registration_number,
+      issue_date,
+      prescription_image_url,
+      notes 
+    } = req.body;
+
+    if (!user_id || !prescription_image_url) {
+      return res.status(400).json({ 
+        error: "User ID and prescription image are required" 
+      });
+    }
+
+    // Calculate expiry date (30 days from issue)
+    const issueDate = issue_date ? new Date(issue_date) : new Date();
+    const expiryDate = new Date(issueDate);
+    expiryDate.setDate(expiryDate.getDate() + 30);
+
+    const result = await pool.query(
+      `INSERT INTO prescriptions 
+       (user_id, doctor_name, doctor_registration_number, issue_date, expiry_date, 
+        prescription_image_url, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING *`,
+      [user_id, doctor_name || null, doctor_registration_number || null, 
+       issueDate, expiryDate, prescription_image_url, notes || null]
+    );
+
+    res.status(201).json({
+      message: "Prescription uploaded successfully",
+      prescription: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error uploading prescription:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get user's prescriptions
+app.get("/api/prescriptions/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { valid_only } = req.query;
+
+    let query = `
+      SELECT p.*, s.business_name as verified_by_name
+      FROM prescriptions p
+      LEFT JOIN sellers s ON p.verified_by = s.id
+      WHERE p.user_id = $1
+    `;
+
+    if (valid_only === 'true') {
+      query += ` AND p.expiry_date >= CURRENT_DATE`;
+    }
+
+    query += ` ORDER BY p.created_at DESC`;
+
+    const result = await pool.query(query, [userId]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching prescriptions:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get prescription by ID
+app.get("/api/prescriptions/:id", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT p.*, s.business_name as verified_by_name
+       FROM prescriptions p
+       LEFT JOIN sellers s ON p.verified_by = s.id
+       WHERE p.id = $1`,
+      [req.params.id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Prescription not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching prescription:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Verify prescription (seller)
+app.put("/api/prescriptions/:id/verify", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { seller_id, status, notes } = req.body;
+
+    if (!seller_id || !status) {
+      return res.status(400).json({ error: "Seller ID and status required" });
+    }
+
+    const result = await pool.query(
+      `UPDATE prescriptions 
+       SET verification_status = $1, 
+           verified_by = $2, 
+           verified_at = CURRENT_TIMESTAMP,
+           notes = COALESCE($3, notes)
+       WHERE id = $4 
+       RETURNING *`,
+      [status, seller_id, notes, id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Prescription not found" });
+    }
+
+    res.json({
+      message: "Prescription verification updated",
+      prescription: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error verifying prescription:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------- ORDERS ----------------------
+
+// Create order
+app.post("/api/orders", async (req, res) => {
+  try {
+    const { buyer_id, seller_id, items, shipping_address, total_amount } = req.body;
+
+    if (!buyer_id || !seller_id || !items || !items.length) {
+      return res.status(400).json({ 
+        error: "Buyer ID, seller ID, and items are required" 
+      });
+    }
+
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+
+      // Generate order number
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+      // Create order
+      const orderResult = await client.query(
+        `INSERT INTO orders 
+         (order_number, buyer_id, seller_id, total_amount, shipping_address)
+         VALUES ($1, $2, $3, $4, $5) 
+         RETURNING *`,
+        [orderNumber, buyer_id, seller_id, total_amount, shipping_address || null]
+      );
+
+      const orderId = orderResult.rows[0].id;
+
+      // Check if any items require prescription
+      let requiresPrescription = false;
+      
+      // Insert order items
+      for (const item of items) {
+        const medicineCheck = await client.query(
+          'SELECT prescription_required FROM medicines WHERE id = $1',
+          [item.medicine_id]
+        );
+
+        const needsRx = medicineCheck.rows[0]?.prescription_required || false;
+        if (needsRx) requiresPrescription = true;
+
+        await client.query(
+          `INSERT INTO order_items 
+           (order_id, medicine_id, seller_medicine_id, prescription_id, 
+            quantity, price_per_unit, total_price, requires_prescription)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [
+            orderId,
+            item.medicine_id,
+            item.seller_medicine_id,
+            item.prescription_id || null,
+            item.quantity,
+            item.price_per_unit,
+            item.total_price,
+            needsRx
+          ]
+        );
+
+        // Update stock
+        await client.query(
+          `UPDATE seller_medicines 
+           SET stock = stock - $1 
+           WHERE id = $2 AND stock >= $1`,
+          [item.quantity, item.seller_medicine_id]
+        );
+      }
+
+      // Update prescription_verified status
+      if (requiresPrescription) {
+        await client.query(
+          'UPDATE orders SET prescription_verified = FALSE WHERE id = $1',
+          [orderId]
+        );
+      } else {
+        await client.query(
+          'UPDATE orders SET prescription_verified = TRUE WHERE id = $1',
+          [orderId]
+        );
+      }
+
+      // Clear cart items
+      await client.query(
+        'DELETE FROM cart_items WHERE user_id = $1 AND seller_id = $2',
+        [buyer_id, seller_id]
+      );
+
+      await client.query('COMMIT');
+
+      res.status(201).json({
+        message: "Order created successfully",
+        order: orderResult.rows[0]
+      });
+
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Error creating order:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get buyer's orders
+app.get("/api/orders/buyer/:buyerId", async (req, res) => {
+  try {
+    const { buyerId } = req.params;
+
+    const result = await pool.query(
+      `SELECT o.*, s.business_name as seller_name,
+              COUNT(oi.id) as item_count
+       FROM orders o
+       JOIN sellers s ON o.seller_id = s.id
+       LEFT JOIN order_items oi ON o.id = oi.order_id
+       WHERE o.buyer_id = $1
+       GROUP BY o.id, s.business_name
+       ORDER BY o.created_at DESC`,
+      [buyerId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching buyer orders:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get seller's orders
+app.get("/api/orders/seller/:sellerId", async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+    const { status } = req.query;
+
+    let query = `
+      SELECT o.*, u.username as buyer_name, u.email as buyer_email,
+             COUNT(oi.id) as item_count
+      FROM orders o
+      JOIN users u ON o.buyer_id = u.id
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.seller_id = $1
+    `;
+    const params = [sellerId];
+
+    if (status) {
+      params.push(status);
+      query += ` AND o.order_status = $${params.length}`;
+    }
+
+    query += ` GROUP BY o.id, u.username, u.email ORDER BY o.created_at DESC`;
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching seller orders:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get order details
+app.get("/api/orders/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const orderResult = await pool.query(
+      `SELECT o.*, 
+              u.username as buyer_name, u.email as buyer_email, u.phone_number,
+              s.business_name as seller_name, s.phone as seller_phone
+       FROM orders o
+       JOIN users u ON o.buyer_id = u.id
+       JOIN sellers s ON o.seller_id = s.id
+       WHERE o.id = $1`,
+      [orderId]
+    );
+
+    if (!orderResult.rows.length) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    const itemsResult = await pool.query(
+      `SELECT oi.*, 
+              m.name as medicine_name, m.generic, m.image_url,
+              p.prescription_image_url, p.verification_status as rx_status
+       FROM order_items oi
+       JOIN medicines m ON oi.medicine_id = m.id
+       LEFT JOIN prescriptions p ON oi.prescription_id = p.id
+       WHERE oi.order_id = $1`,
+      [orderId]
+    );
+
+    res.json({
+      order: orderResult.rows[0],
+      items: itemsResult.rows
+    });
+  } catch (err) {
+    console.error('Error fetching order details:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update order status
+app.put("/api/orders/:orderId/status", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    const result = await pool.query(
+      `UPDATE orders 
+       SET order_status = $1, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $2 
+       RETURNING *`,
+      [status, orderId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json({
+      message: "Order status updated",
+      order: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error updating order status:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Cancel order (buyer)
+app.put("/api/orders/:orderId/cancel", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { buyer_id } = req.body;
+
+    // Verify order belongs to buyer
+    const orderCheck = await pool.query(
+      "SELECT * FROM orders WHERE id = $1 AND buyer_id = $2",
+      [orderId, buyer_id]
+    );
+
+    if (!orderCheck.rows.length) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    const order = orderCheck.rows[0];
+
+    // Only allow cancellation if order is pending or confirmed
+    if (!['pending', 'confirmed'].includes(order.order_status)) {
+      return res.status(400).json({ 
+        error: "Order cannot be cancelled at this stage" 
+      });
+    }
+
+    // Update order status
+    const result = await pool.query(
+      `UPDATE orders 
+       SET order_status = 'cancelled', updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $1 
+       RETURNING *`,
+      [orderId]
+    );
+
+    // Restore stock
+    const items = await pool.query(
+      `SELECT seller_medicine_id, quantity 
+       FROM order_items 
+       WHERE order_id = $1`,
+      [orderId]
+    );
+
+    for (const item of items.rows) {
+      await pool.query(
+        `UPDATE seller_medicines 
+         SET stock = stock + $1 
+         WHERE id = $2`,
+        [item.quantity, item.seller_medicine_id]
+      );
+    }
+
+    res.json({
+      message: "Order cancelled successfully",
+      order: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error cancelling order:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get order statistics for seller
+app.get("/api/seller/:sellerId/order-stats", async (req, res) => {
+  try {
+    const { sellerId } = req.params;
+
+    const stats = await pool.query(`
+      SELECT 
+        COUNT(*) as total_orders,
+        COUNT(CASE WHEN order_status = 'pending' THEN 1 END) as pending_orders,
+        COUNT(CASE WHEN order_status = 'confirmed' THEN 1 END) as confirmed_orders,
+        COUNT(CASE WHEN order_status = 'processing' THEN 1 END) as processing_orders,
+        COUNT(CASE WHEN order_status = 'shipped' THEN 1 END) as shipped_orders,
+        COUNT(CASE WHEN order_status = 'delivered' THEN 1 END) as delivered_orders,
+        COUNT(CASE WHEN order_status = 'cancelled' THEN 1 END) as cancelled_orders,
+        COALESCE(SUM(total_amount), 0) as total_revenue,
+        COALESCE(SUM(CASE WHEN order_status = 'delivered' THEN total_amount ELSE 0 END), 0) as delivered_revenue
+      FROM orders
+      WHERE seller_id = $1
+    `, [sellerId]);
+
+    res.json(stats.rows[0]);
+  } catch (err) {
+    console.error('Error fetching order stats:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Add tracking information to order
+app.put("/api/orders/:orderId/tracking", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { tracking_number, carrier } = req.body;
+
+    if (!tracking_number) {
+      return res.status(400).json({ error: "Tracking number is required" });
+    }
+
+    // Note: You'll need to add tracking_number and carrier columns to orders table
+    const result = await pool.query(
+      `UPDATE orders 
+       SET order_status = 'shipped', 
+           updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $1 
+       RETURNING *`,
+      [orderId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json({
+      message: "Tracking information added",
+      order: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error adding tracking:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Verify order prescription (seller confirms prescription is valid)
+app.put("/api/orders/:orderId/verify-prescription", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { verified } = req.body;
+
+    const result = await pool.query(
+      `UPDATE orders 
+       SET prescription_verified = $1, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $2 
+       RETURNING *`,
+      [verified, orderId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json({
+      message: "Prescription verification updated",
+      order: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error verifying prescription:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ---------------------- CART ----------------------
 app.post("/api/cart", async (req, res) => {

@@ -1,6 +1,5 @@
 // src/App.js
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import Home from "./components/Home";
 import BookAppointment from "./components/BookAppointment";
@@ -18,11 +17,11 @@ import Cart from './components/Cart';
 import SellerDashboard from './components/SellerDashboard';
 import SellerInventory from './components/SellerInventory';
 import SellerAddInventory from './components/SellerAddInventory';
+import Orders from './components/Orders';
+import SellerOrders from './components/SellerOrders';
 import "./App.css";
 
 // Search component to handle navigation
-// Replace the SearchBar component in App.js with this updated version
-
 function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
@@ -61,6 +60,7 @@ function SearchBar() {
     </div>
   );
 }
+
 // Floating Action Buttons component - now role-aware
 function FloatingButtons() {
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ function FloatingButtons() {
   if (isSeller()) {
     return (
       <div className="floating-buttons">
-        <div className="fab-container" onClick={() => navigate('/seller/inventory')} title="Add Medicine">
+        <div className="fab-container" onClick={() => navigate('/seller/inventory/add')} title="Add Medicine">
           <div className="fab-btn seller-fab">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -121,13 +121,13 @@ function FloatingButtons() {
         <span className="fab-label">Wishlist</span>
       </div>
 
-      <div className="fab-container" onClick={() => console.log('Navigate to reminders')} title="Reminders">
+      <div className="fab-container" onClick={() => navigate('/orders')} title="My Orders">
         <div className="fab-btn">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
           </svg>
         </div>
-        <span className="fab-label">Reminders</span>
+        <span className="fab-label">Orders</span>
       </div>
     </div>
   );
@@ -146,6 +146,21 @@ function Footer() {
       </div>
     </footer>
   );
+}
+
+// NEW: Component to handle default route based on role
+function DefaultRoute() {
+  const { isSeller } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isSeller()) {
+      navigate('/seller/dashboard');
+    }
+  }, [isSeller, navigate]);
+
+  // If seller, will redirect. If buyer, show home
+  return isSeller() ? null : <Home />;
 }
 
 // Main App Content (needs access to auth context)
@@ -201,7 +216,10 @@ function AppContent() {
               <Link to="/book-appointment" className="nav-link">BOOK AN APPOINTMENT</Link>
               <Link to="/lab-tests" className="nav-link">LAB TESTS</Link>
               {isLoggedIn() ? (
-                <Link to="/profile" className="nav-link">PROFILE</Link>
+                <>
+                  <Link to="/orders" className="nav-link">MY ORDERS</Link>
+                  <Link to="/profile" className="nav-link">PROFILE</Link>
+                </>
               ) : (
                 <Link to="/signup" className="nav-link">SIGN IN / SIGN UP</Link>
               )}
@@ -212,32 +230,31 @@ function AppContent() {
 
       {/* Page content */}
       <div className="page-container">
-       {/* Page content */}
-<div className="page-container">
-  <Routes>
-    {/* Public routes */}
-    <Route path="/" element={<Home />} />
-    <Route path="/signup" element={<SignUp />} />
-    
-    {/* Buyer routes */}
-    <Route path="/book-appointment" element={<BookAppointment />} />
-    <Route path="/lab-tests" element={<LabTests />} />
-    <Route path="/lab-tests/:category" element={<LabTestsDetails />} />
-    <Route path="/cart" element={<Cart />} />
-    <Route path="/profile" element={<Profile />} />
-    <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
-    <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />
-    <Route path="/facility-details" element={<BookAppointmentDetailsPage />} />
-    <Route path="/wishlist" element={<Wishlist />} />
-    
-    {/* Seller routes */}
-    <Route path="/seller/dashboard" element={<SellerDashboard />} />
-    <Route path="/seller/inventory" element={<SellerInventory />} />
-    <Route path="/seller/inventory/add" element={<SellerAddInventory />} />
-    <Route path="/seller/orders" element={<div style={{padding: '40px', textAlign: 'center'}}>Orders Management - Coming Soon</div>} />
-    <Route path="/seller/analytics" element={<div style={{padding: '40px', textAlign: 'center'}}>Analytics - Coming Soon</div>} />
-  </Routes>
-</div>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<DefaultRoute />} />
+          <Route path="/signup" element={<SignUp />} />
+          
+          {/* Buyer routes */}
+          <Route path="/home" element={<Home />} />
+          <Route path="/book-appointment" element={<BookAppointment />} />
+          <Route path="/lab-tests" element={<LabTests />} />
+          <Route path="/lab-tests/:category" element={<LabTestsDetails />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
+          <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />
+          <Route path="/facility-details" element={<BookAppointmentDetailsPage />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/orders" element={<Orders />} />
+          
+          {/* Seller routes */}
+          <Route path="/seller/dashboard" element={<SellerDashboard />} />
+          <Route path="/seller/inventory" element={<SellerInventory />} />
+          <Route path="/seller/inventory/add" element={<SellerAddInventory />} />
+          <Route path="/seller/orders" element={<SellerOrders />} />
+          <Route path="/seller/analytics" element={<div style={{padding: '40px', textAlign: 'center'}}>Analytics - Coming Soon</div>} />
+        </Routes>
       </div>
 
       {/* Footer */}
