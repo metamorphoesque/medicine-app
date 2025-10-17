@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SignUp.css';
 
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 // Google Icon SVG
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -22,6 +24,25 @@ const AppleIcon = () => (
 const SignUp = ({ onLoginSuccess }) => {
   const [showCreateAccount, setShowCreateAccount] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  // Form states for Create Account
+  const [createAccountForm, setCreateAccountForm] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    dateOfBirth: ''
+  });
+
+  // Form states for Login
+  const [loginForm, setLoginForm] = useState({
+    email: '',
+    password: ''
+  });
+
   const navigate = useNavigate();
 
   const handleGoogleSignUp = () => {
@@ -37,15 +58,182 @@ const SignUp = ({ onLoginSuccess }) => {
   const handleCreateAccount = () => {
     setShowCreateAccount(true);
     setShowLogin(false);
+    setError('');
   };
 
   const handleLogin = () => {
     setShowLogin(true);
     setShowCreateAccount(false);
+    setError('');
   };
 
   const handleClose = () => {
     navigate(-1);
+  };
+
+  // Handle Create Account form changes
+  const handleCreateAccountChange = (e) => {
+    setCreateAccountForm({
+      ...createAccountForm,
+      [e.target.name]: e.target.value
+    });
+    setError('');
+  };
+
+  // Handle Login form changes
+  const handleLoginChange = (e) => {
+    setLoginForm({
+      ...loginForm,
+      [e.target.name]: e.target.value
+    });
+    setError('');
+  };
+
+  // Submit Create Account
+  const handleCreateAccountSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    // Validate passwords match
+    if (createAccountForm.password !== createAccountForm.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    // Validate password strength (at least 6 characters)
+    if (createAccountForm.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setLoading(false);
+      return;
+    }
+
+    // Validate date of birth (must be 18+)
+    if (createAccountForm.dateOfBirth) {
+      const today = new Date();
+      const birthDate = new Date(createAccountForm.dateOfBirth);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        if (age - 1 < 18) {
+          setError('You must be 18 years or older to register');
+          setLoading(false);
+          return;
+        }
+      } else if (age < 18) {
+        setError('You must be 18 years or older to register');
+        setLoading(false);
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/register/buyer`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: createAccountForm.fullName,
+          username: createAccountForm.username,
+          email: createAccountForm.email,
+          password: createAccountForm.password,
+          dateOfBirth: createAccountForm.dateOfBirth || null
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Success! Now log them in automatically
+      alert('Account created successfully! Logging you in...');
+      
+      // Auto-login after successful registration
+      const loginResponse = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: createAccountForm.email,
+          password: createAccountForm.password,
+        }),
+      });
+
+      const loginData = await loginResponse.json();
+
+      if (loginResponse.ok) {
+        // Store user data
+        localStorage.setItem('user', JSON.stringify(loginData.user));
+        
+        // Call the onLoginSuccess callback
+        if (onLoginSuccess) {
+          onLoginSuccess(loginData.user);
+        }
+        
+        // Navigate to home or dashboard
+        navigate('/');
+      } else {
+        // Registration succeeded but login failed - redirect to login
+        setShowCreateAccount(false);
+        setShowLogin(true);
+        setError('Account created! Please log in.');
+      }
+
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Submit Login
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: loginForm.email,
+          password: loginForm.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      // Store user data
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Call the onLoginSuccess callback
+      if (onLoginSuccess) {
+        onLoginSuccess(data.user);
+      }
+      
+      // Navigate to home or dashboard
+      navigate('/');
+
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,6 +259,19 @@ const SignUp = ({ onLoginSuccess }) => {
         <button className="close-btn" onClick={handleClose}>×</button>
         
         <h1 className="signup-title">Join Today</h1>
+
+        {error && (
+          <div className="error-message" style={{
+            backgroundColor: '#ff4444',
+            color: 'white',
+            padding: '10px',
+            borderRadius: '5px',
+            marginBottom: '15px',
+            textAlign: 'center'
+          }}>
+            {error}
+          </div>
+        )}
 
         {!showCreateAccount && !showLogin && (
           <>
@@ -101,14 +302,75 @@ const SignUp = ({ onLoginSuccess }) => {
         {showCreateAccount && (
           <div className="form-container">
             <h2 className="form-title">Create Account</h2>
-            <form className="auth-form">
-              <input type="text" placeholder="Full Name" className="form-input" required />
-              <input type="email" placeholder="Email" className="form-input" required />
-              <input type="password" placeholder="Password" className="form-input" required />
-              <input type="password" placeholder="Confirm Password" className="form-input" required />
-              <button type="submit" className="submit-btn">Sign Up</button>
+            <form className="auth-form" onSubmit={handleCreateAccountSubmit}>
+              <input 
+                type="text" 
+                name="fullName"
+                placeholder="Full Name" 
+                className="form-input" 
+                value={createAccountForm.fullName}
+                onChange={handleCreateAccountChange}
+                required 
+              />
+              <input 
+                type="text" 
+                name="username"
+                placeholder="Username" 
+                className="form-input" 
+                value={createAccountForm.username}
+                onChange={handleCreateAccountChange}
+                required 
+              />
+              <input 
+                type="email" 
+                name="email"
+                placeholder="Email" 
+                className="form-input" 
+                value={createAccountForm.email}
+                onChange={handleCreateAccountChange}
+                required 
+              />
+              <input 
+                type="date" 
+                name="dateOfBirth"
+                placeholder="Date of Birth" 
+                className="form-input" 
+                value={createAccountForm.dateOfBirth}
+                onChange={handleCreateAccountChange}
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                required 
+              />
+              <input 
+                type="password" 
+                name="password"
+                placeholder="Password (min 6 characters)" 
+                className="form-input" 
+                value={createAccountForm.password}
+                onChange={handleCreateAccountChange}
+                minLength="6"
+                required 
+              />
+              <input 
+                type="password" 
+                name="confirmPassword"
+                placeholder="Confirm Password" 
+                className="form-input" 
+                value={createAccountForm.confirmPassword}
+                onChange={handleCreateAccountChange}
+                required 
+              />
+              <button type="submit" className="submit-btn" disabled={loading}>
+                {loading ? 'Creating Account...' : 'Sign Up'}
+              </button>
             </form>
-            <button className="back-btn" onClick={() => setShowCreateAccount(false)}>
+            <button 
+              className="back-btn" 
+              onClick={() => {
+                setShowCreateAccount(false);
+                setError('');
+              }}
+              disabled={loading}
+            >
               Back
             </button>
           </div>
@@ -117,12 +379,37 @@ const SignUp = ({ onLoginSuccess }) => {
         {showLogin && (
           <div className="form-container">
             <h2 className="form-title">Log In</h2>
-            <form className="auth-form">
-              <input type="email" placeholder="Email" className="form-input" required />
-              <input type="password" placeholder="Password" className="form-input" required />
-              <button type="submit" className="submit-btn">Log In</button>
+            <form className="auth-form" onSubmit={handleLoginSubmit}>
+              <input 
+                type="email" 
+                name="email"
+                placeholder="Email" 
+                className="form-input" 
+                value={loginForm.email}
+                onChange={handleLoginChange}
+                required 
+              />
+              <input 
+                type="password" 
+                name="password"
+                placeholder="Password" 
+                className="form-input" 
+                value={loginForm.password}
+                onChange={handleLoginChange}
+                required 
+              />
+              <button type="submit" className="submit-btn" disabled={loading}>
+                {loading ? 'Logging In...' : 'Log In'}
+              </button>
             </form>
-            <button className="back-btn" onClick={() => setShowLogin(false)}>
+            <button 
+              className="back-btn" 
+              onClick={() => {
+                setShowLogin(false);
+                setError('');
+              }}
+              disabled={loading}
+            >
               Back
             </button>
           </div>

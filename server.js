@@ -103,6 +103,7 @@ app.post("/api/register/buyer", async (req, res) => {
   try {
     const { username, email, password, fullName, dateOfBirth } = req.body;
     
+    
     if (!username || !email || !password) {
       return res.status(400).json({ error: "All fields required" });
     }
@@ -127,6 +128,7 @@ app.post("/api/register/buyer", async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
     
     // Insert user
+      
     const result = await pool.query(
       `INSERT INTO users (username, email, password_hash, user_role, full_name, date_of_birth) 
        VALUES ($1, $2, $3, 'buyer', $4, $5) 
@@ -862,13 +864,30 @@ app.post("/api/seller-medicines", async (req, res) => {
 app.get("/api/seller-medicines", async (req, res) => {
   try {
     const { seller_id, medicine_id } = req.query;
+
+    console.log('=== Fetching Seller Medicines ===');
+    console.log('seller_id:', seller_id);
+    console.log('medicine_id:', medicine_id);
+
     let query = `
-      SELECT sm.*, m.name as medicine_name, s.name as seller_name
+      SELECT 
+        sm.id,
+        sm.seller_id,
+        sm.medicine_id,
+        sm.price,
+        sm.stock,
+        sm.requires_prescription,
+        sm.created_at,
+        sm.updated_at,
+        COALESCE(s.business_name, s.name) AS seller_name,
+        s.business_name,
+        m.name AS medicine_name
       FROM seller_medicines sm
       JOIN medicines m ON sm.medicine_id = m.id
       JOIN sellers s ON sm.seller_id = s.id
       WHERE 1=1
     `;
+
     const params = [];
 
     if (seller_id) {
@@ -883,10 +902,19 @@ app.get("/api/seller-medicines", async (req, res) => {
 
     query += ` ORDER BY sm.price ASC`;
 
+    console.log('Query:', query);
+    console.log('Params:', params);
+
     const result = await pool.query(query, params);
+    
+    console.log('Found sellers:', result.rows.length);
+    if (result.rows.length > 0) {
+      console.log('Sample result:', result.rows[0]);
+    }
+
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching seller medicines:", err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -533,6 +533,125 @@ margin-left: 0.5rem;
   border-radius: 0.5rem;
 }
 
+/* Add these styles to your MedicineDetailsPage.css */
+
+/* Seller Selection Styles */
+.sellers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.seller-option {
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: white;
+}
+
+.seller-option:hover {
+  border-color: #004d40;
+  box-shadow: 0 2px 8px rgba(0, 77, 64, 0.1);
+  transform: translateY(-2px);
+}
+
+.seller-option.selected {
+  border-color: #004d40;
+  background-color: #f0f9f8;
+  box-shadow: 0 2px 12px rgba(0, 77, 64, 0.15);
+}
+
+.seller-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.seller-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 15px;
+}
+
+.seller-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #004d40;
+}
+
+.seller-stock {
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.in-stock {
+  color: #4caf50;
+  font-weight: 600;
+}
+
+.out-of-stock {
+  color: #f44336;
+  font-weight: 600;
+}
+
+.no-sellers-notice {
+  padding: 20px;
+  background-color: #fff3e0;
+  border: 2px solid #ff9800;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 15px;
+}
+
+.no-sellers-notice p {
+  margin: 0;
+  color: #e65100;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.seller-badge {
+  font-size: 12px;
+  color: #666;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* Update button styles for disabled state */
+.btn-cart:disabled {
+  background: linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-cart:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .seller-option {
+    padding: 12px;
+  }
+
+  .seller-name {
+    font-size: 14px;
+  }
+
+  .seller-price {
+    font-size: 16px;
+  }
+
+  .seller-stock {
+    font-size: 12px;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .medicine-card {

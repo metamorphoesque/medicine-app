@@ -1,28 +1,36 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './MedicineDetailsPage.css';
-import { addToCart } from './Cart';
 import { WishlistContext } from './Wishlist';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const MedicineDetailsPage = () => {
   const { medicineId } = useParams();
   const { addToWishlist } = useContext(WishlistContext);
+  const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const [medicine, setMedicine] = useState(null);
   const [similarMedicines, setSimilarMedicines] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [selectedSeller, setSelectedSeller] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [expandedSections, setExpandedSections] = useState({ symptoms: false, description: false });
+  const [addingToCart, setAddingToCart] = useState(false);
 
   // Fetch medicine details
   const fetchMedicineDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/medicines/${medicineId}`);
+      console.log('Fetching medicine details for ID:', medicineId);
+      const response = await fetch(`${API_BASE}/api/medicines/${medicineId}`);
       if (!response.ok) throw new Error('Medicine not found');
       const data = await response.json();
+      console.log('Medicine data:', data);
       setMedicine(data);
       setError(null);
     } catch (err) {
@@ -33,10 +41,44 @@ const MedicineDetailsPage = () => {
     }
   };
 
+  // Fetch sellers offering this medicine
+  const fetchSellers = async () => {
+    try {
+      console.log('Fetching sellers for medicine ID:', medicineId);
+      const response = await fetch(`${API_BASE}/api/seller-medicines?medicine_id=${medicineId}`);
+      console.log('Sellers response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch sellers');
+      }
+      
+      const data = await response.json();
+      console.log('Sellers data received:', data);
+      console.log('Number of sellers:', data.length);
+      
+      setSellers(data);
+      
+      // Auto-select the cheapest seller
+      if (data.length > 0) {
+        const cheapestSeller = data.reduce((prev, current) => 
+          (parseFloat(prev.price) < parseFloat(current.price)) ? prev : current
+        );
+        console.log('Cheapest seller selected:', cheapestSeller);
+        setSelectedSeller(cheapestSeller);
+      } else {
+        console.log('No sellers found for this medicine');
+      }
+    } catch (err) {
+      console.error('Error fetching sellers:', err);
+      // If no sellers, show a message but don't error out
+      setSellers([]);
+    }
+  };
+
   // Fetch similar medicines
   const fetchSimilarMedicines = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/medicines/${medicineId}/similar`);
+      const response = await fetch(`${API_BASE}/api/medicines/${medicineId}/similar`);
       if (!response.ok) throw new Error('Failed to fetch similar medicines');
       const data = await response.json();
       setSimilarMedicines(data);
@@ -48,6 +90,7 @@ const MedicineDetailsPage = () => {
   useEffect(() => {
     if (medicineId) {
       fetchMedicineDetails();
+      fetchSellers();
       fetchSimilarMedicines();
     }
   }, [medicineId]);
@@ -62,21 +105,54 @@ const MedicineDetailsPage = () => {
     return colors[Math.abs(hash) % colors.length];
   };
 
-  // Handlers
-  const handleAddToCart = () => {
-    if (!medicine) return;
-    addToCart({
-      id: medicine.id,
-      name: medicine.name,
-      price: medicine.price || 10.0,
-      manufacturer_name: medicine.manufacturer_name,
-      image_url: medicine.image_url,
-      quantity: 1
-    });
-    navigate('/cart');
+  // Add to cart handler
+  const handleAddToCart = async () => {
+    if (!isLoggedIn()) {
+      alert('Please log in to add items to cart');
+      navigate('/signup');
+      return;
+    }
+
+    if (!selectedSeller) {
+      alert('This medicine is currently not available from any seller. Please check back later.');
+      return;
+    }
+
+    setAddingToCart(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          seller_id: selectedSeller.seller_id,
+          medicine_id: medicineId,
+          quantity: 1
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to cart');
+      }
+
+      alert('Added to cart successfully!');
+      navigate('/cart');
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      alert('Failed to add to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   const handleAddToWishlist = () => {
+    if (!isLoggedIn()) {
+      alert('Please log in to add items to wishlist');
+      navigate('/signup');
+      return;
+    }
+    
     addToWishlist(medicine);
     navigate('/wishlist');
   };
@@ -202,29 +278,75 @@ const MedicineDetailsPage = () => {
                   </div>
                 </div>
               )}
+
+              {/* Seller Selection Section */}
+              {sellers.length > 0 ? (
+                <div>
+                  <h3 className="section-title">Available From ({sellers.length} seller{sellers.length > 1 ? 's' : ''})</h3>
+                  <div className="sellers-list">
+                    {sellers.map((seller) => (
+                      <div 
+                        key={seller.id} 
+                        className={`seller-option ${selectedSeller?.id === seller.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedSeller(seller)}
+                      >
+                        <div className="seller-info">
+                          <div className="seller-name">{seller.seller_name || seller.business_name || 'Unknown Seller'}</div>
+                          <div className="seller-price">${parseFloat(seller.price).toFixed(2)}</div>
+                        </div>
+                        {seller.stock !== undefined && seller.stock !== null && (
+                          <div className="seller-stock">
+                            {seller.stock > 0 ? (
+                              <span className="in-stock">In Stock ({seller.stock})</span>
+                            ) : (
+                              <span className="out-of-stock">Out of Stock</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="no-sellers-notice">
+                  <p>⚠️ Currently not available from any sellers</p>
+                  <p style={{ fontSize: '0.9em', color: '#666', marginTop: '0.5rem' }}>
+                    This medicine is in our catalog but no sellers have it in stock yet.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="medicine-actions-right">
-              {medicine.price && (
+              {selectedSeller && (
                 <div className="price-section">
                   <p className="price-label">Price</p>
-                  <p className="price">${parseFloat(medicine.price).toFixed(2)}</p>
+                  <p className="price">${parseFloat(selectedSeller.price).toFixed(2)}</p>
+                  <p className="seller-badge">from {selectedSeller.seller_name || selectedSeller.business_name || 'seller'}</p>
                 </div>
               )}
 
               <div className="action-buttons">
-               <button onClick={handleAddToCart} className="btn btn-cart">
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96
-                         0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1
-                         0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                     </svg> Add to Cart </button>
+                <button 
+                  onClick={handleAddToCart} 
+                  className="btn btn-cart"
+                  disabled={addingToCart || !selectedSeller || (selectedSeller.stock !== undefined && selectedSeller.stock === 0)}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96
+                           0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1
+                           0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                  </svg>
+                  {addingToCart ? 'Adding...' : 'Add to Cart'}
+                </button>
 
-              <button onClick={handleAddToWishlist} className="btn btn-wishlist">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-               </svg>  Add to Wishlist </button> </div>
-
+                <button onClick={handleAddToWishlist} className="btn btn-wishlist">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                  Add to Wishlist
+                </button>
+              </div>
 
               {medicine.category_name && (
                 <div className="category-section">
@@ -277,8 +399,6 @@ const MedicineDetailsPage = () => {
                               </div>
                             )}
                           </div>
-
-                          {similarMed.price && <div className="similar-price"><p className="price small">${parseFloat(similarMed.price).toFixed(2)}</p></div>}
                         </div>
                       </div>
                     </div>

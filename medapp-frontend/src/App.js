@@ -1,3 +1,4 @@
+
 // src/App.js
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
@@ -19,6 +20,8 @@ import SellerInventory from './components/SellerInventory';
 import SellerAddInventory from './components/SellerAddInventory';
 import Orders from './components/Orders';
 import SellerOrders from './components/SellerOrders';
+import ProtectedRoute from './components/ProtectedRoute';
+import Checkout from './components/Checkout';
 import "./App.css";
 
 // Search component to handle navigation
@@ -61,10 +64,19 @@ function SearchBar() {
   );
 }
 
-// Floating Action Buttons component - now role-aware
+// Floating Action Buttons component - now role-aware with login protection
 function FloatingButtons() {
   const navigate = useNavigate();
-  const { user, isSeller } = useAuth();
+  const { user, isSeller, isLoggedIn } = useAuth();
+
+  const handleProtectedNavigation = (path) => {
+    if (!isLoggedIn()) {
+      alert('Please log in to access this feature');
+      navigate('/signup');
+      return;
+    }
+    navigate(path);
+  };
 
   // Seller FABs
   if (isSeller()) {
@@ -100,10 +112,10 @@ function FloatingButtons() {
     );
   }
 
-  // Buyer FABs (default)
+  // Buyer FABs (default) - with login protection
   return (
     <div className="floating-buttons">
-      <div className="fab-container" onClick={() => navigate('/cart')} title="Cart">
+      <div className="fab-container" onClick={() => handleProtectedNavigation('/cart')} title="Cart">
         <div className="fab-btn">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12L8.1 13h7.45c.75 0 1.41-.41 1.75-1.03L21.7 4H5.21l-.94-2H1zm16 16c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
@@ -112,7 +124,7 @@ function FloatingButtons() {
         <span className="fab-label">Cart</span>
       </div>
 
-      <div className="fab-container" onClick={() => navigate('/wishlist')} title="Wishlist">
+      <div className="fab-container" onClick={() => handleProtectedNavigation('/wishlist')} title="Wishlist">
         <div className="fab-btn">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
@@ -121,7 +133,7 @@ function FloatingButtons() {
         <span className="fab-label">Wishlist</span>
       </div>
 
-      <div className="fab-container" onClick={() => navigate('/orders')} title="My Orders">
+      <div className="fab-container" onClick={() => handleProtectedNavigation('/orders')} title="My Orders">
         <div className="fab-btn">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
@@ -148,7 +160,7 @@ function Footer() {
   );
 }
 
-// NEW: Component to handle default route based on role
+// Component to handle default route based on role
 function DefaultRoute() {
   const { isSeller } = useAuth();
   const navigate = useNavigate();
@@ -234,26 +246,67 @@ function AppContent() {
           {/* Public routes */}
           <Route path="/" element={<DefaultRoute />} />
           <Route path="/signup" element={<SignUp />} />
-          
-          {/* Buyer routes */}
           <Route path="/home" element={<Home />} />
           <Route path="/book-appointment" element={<BookAppointment />} />
           <Route path="/lab-tests" element={<LabTests />} />
           <Route path="/lab-tests/:category" element={<LabTestsDetails />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/medicines/category/:categoryName" element={<MedicinePage />} />
           <Route path="/medicines/:medicineId" element={<MedicineDetailsPage />} />
           <Route path="/facility-details" element={<BookAppointmentDetailsPage />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/orders" element={<Orders />} />
           
-          {/* Seller routes */}
-          <Route path="/seller/dashboard" element={<SellerDashboard />} />
-          <Route path="/seller/inventory" element={<SellerInventory />} />
-          <Route path="/seller/inventory/add" element={<SellerAddInventory />} />
-          <Route path="/seller/orders" element={<SellerOrders />} />
-          <Route path="/seller/analytics" element={<div style={{padding: '40px', textAlign: 'center'}}>Analytics - Coming Soon</div>} />
+          {/* Protected Buyer Routes - Require Login */}
+          <Route path="/cart" element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          } />
+          <Route path="/wishlist" element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          } />
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/checkout" element={
+           <ProtectedRoute>
+            <Checkout />
+           </ProtectedRoute>
+          } />
+          
+          {/* Protected Seller Routes - Require Login & Seller Role */}
+          <Route path="/seller/dashboard" element={
+            <ProtectedRoute>
+              <SellerDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/seller/inventory" element={
+            <ProtectedRoute>
+              <SellerInventory />
+            </ProtectedRoute>
+          } />
+          <Route path="/seller/inventory/add" element={
+            <ProtectedRoute>
+              <SellerAddInventory />
+            </ProtectedRoute>
+          } />
+          <Route path="/seller/orders" element={
+            <ProtectedRoute>
+              <SellerOrders />
+            </ProtectedRoute>
+          } />
+          <Route path="/seller/analytics" element={
+            <ProtectedRoute>
+              <div style={{padding: '40px', textAlign: 'center'}}>Analytics - Coming Soon</div>
+            </ProtectedRoute>
+          } />
         </Routes>
       </div>
 
