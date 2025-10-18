@@ -12,7 +12,33 @@ const { Pool } = pkg;
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ---------------------- ENHANCED CORS CONFIGURATION ----------------------
+// ============ DEBUG CODE  ============
+console.log('🔍 Starting route registration with debugging...');
+
+const routeRegistry = [];
+
+// Wrap route methods to track which one fails
+['get', 'post', 'put', 'delete', 'patch'].forEach(method => {
+  const original = app[method].bind(app);
+  app[method] = function(path, ...handlers) {
+    try {
+      console.log(`✅ Registering ${method.toUpperCase()} ${path}`);
+      routeRegistry.push({ method: method.toUpperCase(), path });
+      return original(path, ...handlers);
+    } catch (error) {
+      console.error(`❌ ERROR registering ${method.toUpperCase()} ${path}`);
+      console.error('Error details:', error.message);
+      console.error('Path value:', JSON.stringify(path));
+      console.error('Path type:', typeof path);
+      throw error;
+    }
+  };
+});
+
+console.log('🔍 Debug wrapper installed\n');
+// ============ END DEBUG CODE ============
+
+// ---------------------- CORS CONFIGURATION ----------------------
 
 const allowedOrigins = [
   'http://localhost:3000',
