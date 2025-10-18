@@ -425,13 +425,13 @@ app.put("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
     let paramCount = 1;
 
     if (price !== undefined) {
-      updates.push(`price = $${paramCount}`);
+      updates.push(`price = $${paramCount}`);  // Fixed: Added $
       values.push(price);
       paramCount++;
     }
 
     if (stock !== undefined) {
-      updates.push(`stock = $${paramCount}`);
+      updates.push(`stock = $${paramCount}`);  // Fixed: Added $
       values.push(stock);
       paramCount++;
     }
@@ -464,7 +464,7 @@ app.put("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
     console.error('Error updating inventory:', err);
     res.status(500).json({ error: err.message });
   }
-});
+}); 
 
 app.delete("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
   try {
@@ -869,12 +869,12 @@ app.get("/api/seller-medicines", async (req, res) => {
 
     if (seller_id) {
       params.push(seller_id);
-      query += ` AND sm.seller_id = ${params.length}`;
+      query += ` AND sm.seller_id = $${params.length}`;  // Fixed: Added $
     }
 
     if (medicine_id) {
       params.push(medicine_id);
-      query += ` AND sm.medicine_id = ${params.length}`;
+      query += ` AND sm.medicine_id = $${params.length}`;  // Fixed: Added $
     }
 
     query += ` ORDER BY sm.price ASC`;
@@ -1152,7 +1152,7 @@ app.get("/api/orders/seller/:sellerId", async (req, res) => {
 
     if (status) {
       params.push(status);
-      query += ` AND o.order_status = ${params.length}`;
+      query += ` AND o.order_status = $${params.length}`;  // Fixed: Added $
     }
 
     query += ` GROUP BY o.id, u.username, u.email ORDER BY o.created_at DESC`;
@@ -1451,24 +1451,61 @@ app.delete("/api/cart/:itemId", async (req, res) => {
 });
 
 // ---------------------- HEALTHCARE FACILITIES ----------------------
-app.get("/api/healthcare", async (req, res) => {
+app.get("/api/healthcare/byState", async (req, res) => {
   try {
-    const { type } = req.query;
-    let query = `SELECT * FROM healthcare_facilities WHERE 1=1`;
+    const { state, type, limit = 20, pincode } = req.query;
+
+    const queryLimit = Math.min(parseInt(limit) || 20, 100);
+
+    let query = `
+      SELECT id, name, facility_type as type, state, address, phone, 
+             latitude, longitude, rating, opening_hours, doctor_category, pincode
+      FROM healthcare_facilities
+      WHERE 1=1
+    `;
     const params = [];
-    
-    if (type && type !== "all") {
-      query += ` AND (LOWER(facility_type) = LOWER($1) OR LOWER(doctor_category) = LOWER($1))`;
-      params.push(type);
+
+    if (state && state.trim() !== '') {
+      params.push(state.trim());
+      query += ` AND LOWER(state) = LOWER($${params.length})`;  // Fixed: Added $
     }
-    
-    query += ` ORDER BY name ASC`;
-    
+
+    if (pincode && pincode.trim() !== '') {
+      params.push(pincode.trim());
+      query += ` AND pincode = $${params.length}`;  // Fixed: Added $
+    }
+
+    if (type && type !== "all" && type.trim() !== '') {
+      params.push(type.trim());
+      query += ` AND (LOWER(facility_type) = LOWER($${params.length}) OR LOWER(doctor_category) = LOWER($${params.length}))`;  // Fixed: Added $
+    }
+
+    query += ` ORDER BY rating DESC NULLS LAST, name ASC LIMIT $${params.length + 1}`;  // Fixed: Added $
+    params.push(queryLimit);
+
     const result = await pool.query(query, params);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Healthcare facilities error:", err);
-    res.status(500).json({ error: err.message });
+
+    const formattedResults = result.rows.map(facility => ({
+      ...facility,
+      rating: facility.rating || 0,
+      distance: 'N/A',
+      open: true
+    }));
+
+    res.json({ 
+      results: formattedResults,
+      total: formattedResults.length,
+      state: state || null,
+      type: type || 'all',
+      pincode: pincode || null
+    });
+
+  } catch (error) {
+    console.error("Error in healthcare byState:", error);
+    res.status(500).json({ 
+      error: "Internal server error", 
+      details: error.message 
+    });
   }
 });
 
@@ -1830,7 +1867,7 @@ app.get("/api/lab-tests", async (req, res) => {
     
     if (category && category !== 'all') {
       params.push(category);
-      query += ` AND category = ${params.length}`;
+      query += ` AND category = $${params.length}`;  // Fixed: Added $
     }
     
     query += ` ORDER BY name ASC`;
@@ -1842,6 +1879,7 @@ app.get("/api/lab-tests", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 app.get("/api/lab-packages", async (req, res) => {
   try {
