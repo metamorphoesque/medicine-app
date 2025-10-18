@@ -39,39 +39,12 @@ console.log('🔍 Debug wrapper installed\n');
 // ============ END DEBUG CODE ============
 
 // ---------------------- CORS CONFIGURATION ----------------------
-
-
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://127.0.0.1:3000'
-];
-
-// Only add FRONTEND_URL if it exists and is valid
-if (process.env.FRONTEND_URL && process.env.FRONTEND_URL.trim() !== '') {
-  allowedOrigins.push(process.env.FRONTEND_URL.trim());
-}
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️ CORS blocked origin: ${origin}`);
-      callback(null, true); // Still allow it but log the warning
-    }
-  },
+app.use(cors({
+  origin: true, // Allow all origins temporarily
   credentials: true,
-  optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+}));
 
 // ---------------------- MIDDLEWARE ----------------------
 app.use(bodyParser.json());
