@@ -15,7 +15,6 @@ const PORT = process.env.PORT || 5000;
 
 // ---------------------- ENHANCED CORS CONFIGURATION ----------------------
 
-const cors = require('cors');
 
 const allowedOrigins = [
   'http://localhost:3000',
