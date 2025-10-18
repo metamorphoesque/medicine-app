@@ -1,8 +1,8 @@
-/* Cart Page Enhanced Styles */
+/* Cart Page - Hospital Green Theme */
 
 .cart-page {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 50%, #e0f2f1 100%);
   padding: 20px;
 }
 
@@ -14,14 +14,14 @@
 .cart-title {
   font-size: 32px;
   font-weight: 700;
-  color: #2c3e50;
+  color: #1b5e20;
   margin: 0 0 8px 0;
 }
 
 .cart-title-underline {
   height: 4px;
   width: 80px;
-  background: linear-gradient(to right, #3498db, #2ecc71);
+  background: linear-gradient(to right, #2e7d32, #43a047);
   border-radius: 2px;
   margin-bottom: 16px;
 }
@@ -30,12 +30,13 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #fff3cd;
+  background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
-  color: #856404;
-  border: 1px solid #ffeaa7;
+  color: #1b5e20;
+  border: 1px solid #81c784;
+  box-shadow: 0 2px 4px rgba(27, 94, 32, 0.1);
 }
 
 .rx-icon {
@@ -57,45 +58,47 @@
   text-align: center;
   padding: 60px 20px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.08);
+  border: 1px solid #c8e6c9;
 }
 
 .empty-cart-icon {
   width: 80px;
   height: 80px;
-  color: #bdc3c7;
+  color: #81c784;
   margin: 0 auto 20px;
   stroke-width: 1.5;
 }
 
 .empty-cart h2 {
   font-size: 24px;
-  color: #2c3e50;
+  color: #1b5e20;
   margin: 0 0 8px 0;
 }
 
 .empty-cart p {
-  color: #7f8c8d;
+  color: #558b2f;
   margin: 0 0 24px 0;
 }
 
 .continue-shopping-btn {
-  background: #3498db;
+  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
   color: white;
   border: none;
   padding: 12px 32px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.2);
 }
 
 .continue-shopping-btn:hover {
-  background: #2980b9;
+  background: linear-gradient(135deg, #1b5e20 0%, #0d3d13 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 6px 16px rgba(27, 94, 32, 0.3);
 }
 
 /* Cart Items */
@@ -107,19 +110,22 @@
 
 .cart-item {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(27, 94, 32, 0.08);
+  transition: all 0.3s;
   position: relative;
+  border: 1px solid #e8f5e9;
 }
 
 .cart-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 16px rgba(27, 94, 32, 0.12);
+  transform: translateY(-2px);
 }
 
 .cart-item.requires-rx {
-  border-left: 4px solid #3498db;
+  border-left: 4px solid #43a047;
+  background: linear-gradient(to right, #f1f8f4 0%, white 10%);
 }
 
 .cart-item > div:first-child {
@@ -138,9 +144,10 @@
   width: 100px;
   height: 100px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #f8f9fa;
+  background: #f1f8f4;
+  border: 2px solid #e8f5e9;
 }
 
 .item-image img {
@@ -158,6 +165,7 @@
   font-size: 36px;
   font-weight: 700;
   color: white;
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
 }
 
 .item-details {
@@ -170,14 +178,14 @@
 .item-name {
   font-size: 18px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #1b5e20;
   margin: 0;
 }
 
 .item-manufacturer,
 .item-seller {
   font-size: 13px;
-  color: #7f8c8d;
+  color: #558b2f;
   margin: 0;
 }
 
@@ -191,21 +199,23 @@
 .qty-btn {
   width: 32px;
   height: 32px;
-  border: 1px solid #ddd;
+  border: 2px solid #81c784;
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  color: #2c3e50;
+  color: #2e7d32;
+  font-weight: 600;
 }
 
 .qty-btn:hover:not(:disabled) {
-  background: #ecf0f1;
-  border-color: #bdc3c7;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-color: #66bb6a;
+  transform: scale(1.05);
 }
 
 .qty-btn:disabled {
@@ -216,7 +226,7 @@
 .qty-display {
   font-size: 16px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #1b5e20;
   min-width: 24px;
   text-align: center;
 }
@@ -231,13 +241,13 @@
 .item-price {
   font-size: 24px;
   font-weight: 700;
-  color: #27ae60;
+  color: #2e7d32;
   margin: 0;
 }
 
 .item-price-unit {
   font-size: 12px;
-  color: #7f8c8d;
+  color: #558b2f;
   margin: 0;
 }
 
@@ -254,7 +264,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -264,12 +274,13 @@
 
 .wishlist-btn {
   background: white;
-  border: 1px solid #e74c3c;
-  color: #e74c3c;
+  border: 2px solid #4caf50;
+  color: #2e7d32;
 }
 
 .wishlist-btn:hover {
-  background: #fee;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  transform: translateY(-1px);
 }
 
 .heart-icon {
@@ -279,13 +290,14 @@
 
 .remove-btn {
   background: white;
-  border: 1px solid #95a5a6;
-  color: #546e7a;
+  border: 2px solid #81c784;
+  color: #558b2f;
 }
 
 .remove-btn:hover {
-  background: #ecf0f1;
-  border-color: #7f8c8d;
+  background: #f1f8f4;
+  border-color: #66bb6a;
+  transform: translateY(-1px);
 }
 
 .cross-icon {
@@ -297,7 +309,7 @@
 .prescription-requirement {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 2px dashed #ecf0f1;
+  border-top: 2px dashed #c8e6c9;
 }
 
 .prescription-header {
@@ -311,36 +323,39 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #e3f2fd;
-  color: #1976d2;
+  background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+  color: #1b5e20;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
+  border: 1px solid #81c784;
 }
 
 .rx-uploaded {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #d4edda;
-  color: #155724;
+  background: linear-gradient(135deg, #81c784 0%, #66bb6a 100%);
+  color: white;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
+  box-shadow: 0 2px 4px rgba(27, 94, 32, 0.2);
 }
 
 .rx-pending {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #fff3cd;
-  color: #856404;
+  background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+  color: #f57f17;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
+  border: 1px solid #fdd835;
 }
 
 .prescription-options {
@@ -352,27 +367,35 @@
 .prescription-label {
   font-size: 14px;
   font-weight: 500;
-  color: #2c3e50;
+  color: #1b5e20;
 }
 
 .prescription-select {
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 2px solid #81c784;
+  border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  background: white;
+  color: #1b5e20;
+  transition: all 0.2s;
+}
+
+.prescription-select:focus {
+  outline: none;
+  border-color: #43a047;
+  box-shadow: 0 0 0 3px rgba(67, 160, 71, 0.1);
 }
 
 .upload-rx-btn,
 .upload-rx-btn-secondary,
 .change-rx-btn {
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
   border: none;
   display: inline-flex;
   align-items: center;
@@ -381,35 +404,38 @@
 }
 
 .upload-rx-btn {
-  background: #3498db;
+  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
   color: white;
   width: 100%;
+  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.2);
 }
 
 .upload-rx-btn:hover {
-  background: #2980b9;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  background: linear-gradient(135deg, #1b5e20 0%, #0d3d13 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(27, 94, 32, 0.3);
 }
 
 .upload-rx-btn-secondary {
   background: white;
-  color: #3498db;
-  border: 2px solid #3498db;
+  color: #2e7d32;
+  border: 2px solid #43a047;
 }
 
 .upload-rx-btn-secondary:hover {
-  background: #eef5fb;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  transform: translateY(-1px);
 }
 
 .change-rx-btn {
   background: white;
-  color: #e67e22;
-  border: 2px solid #e67e22;
+  color: #f57f17;
+  border: 2px solid #fdd835;
 }
 
 .change-rx-btn:hover {
-  background: #fef5e7;
+  background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+  transform: translateY(-1px);
 }
 
 .prescription-actions {
@@ -420,23 +446,24 @@
 /* Price Summary */
 .price-summary {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.08);
   position: sticky;
   top: 20px;
+  border: 1px solid #e8f5e9;
 }
 
 .summary-title {
   font-size: 20px;
   font-weight: 700;
-  color: #2c3e50;
+  color: #1b5e20;
   margin: 0 0 16px 0;
 }
 
 .summary-line {
-  height: 1px;
-  background: #ecf0f1;
+  height: 2px;
+  background: linear-gradient(to right, #e8f5e9, #c8e6c9, #e8f5e9);
   margin: 16px 0;
 }
 
@@ -449,29 +476,30 @@
 
 .summary-label {
   font-size: 14px;
-  color: #546e7a;
+  color: #558b2f;
 }
 
 .summary-value {
   font-size: 15px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #1b5e20;
 }
 
 .free-delivery {
-  color: #27ae60;
+  color: #2e7d32;
   font-weight: 700;
 }
 
 .delivery-note {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #1b5e20;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 12px;
   margin: 12px 0;
   text-align: center;
   font-weight: 500;
+  border: 1px solid #81c784;
 }
 
 .summary-total {
@@ -480,25 +508,25 @@
   align-items: center;
   margin: 16px 0;
   padding: 16px 0;
-  border-top: 2px solid #ecf0f1;
+  border-top: 2px solid #c8e6c9;
 }
 
 .total-label {
   font-size: 18px;
   font-weight: 700;
-  color: #2c3e50;
+  color: #1b5e20;
 }
 
 .total-value {
   font-size: 28px;
   font-weight: 700;
-  color: #27ae60;
+  color: #2e7d32;
 }
 
 .checkout-warning {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+  border: 2px solid #fdd835;
+  border-radius: 10px;
   padding: 12px;
   margin: 16px 0;
   display: flex;
@@ -513,14 +541,14 @@
 
 .checkout-warning strong {
   display: block;
-  color: #856404;
+  color: #f57f17;
   font-size: 14px;
   margin-bottom: 4px;
 }
 
 .checkout-warning p {
   margin: 0;
-  color: #856404;
+  color: #f57f17;
   font-size: 13px;
   line-height: 1.4;
 }
@@ -528,10 +556,10 @@
 .checkout-btn {
   width: 100%;
   padding: 14px 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
@@ -541,16 +569,18 @@
   justify-content: center;
   gap: 8px;
   margin-top: 16px;
+  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.2);
 }
 
 .checkout-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1b5e20 0%, #0d3d13 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px rgba(27, 94, 32, 0.3);
 }
 
 .checkout-btn:disabled,
 .checkout-btn.disabled {
-  background: #40b592;
+  background: linear-gradient(135deg, #a5d6a7 0%, #81c784 100%);
   cursor: not-allowed;
   opacity: 0.6;
   transform: none;
@@ -564,7 +594,7 @@
   width: 100%;
   padding: 10px;
   background: transparent;
-  color: #1ecc8c;
+  color: #2e7d32;
   border: none;
   font-size: 14px;
   font-weight: 500;
@@ -574,7 +604,7 @@
 }
 
 .continue-shopping-link:hover {
-  color: #29b976;
+  color: #1b5e20;
   text-decoration: underline;
 }
 
@@ -586,15 +616,16 @@
   justify-content: center;
   padding: 60px 20px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(27, 94, 32, 0.08);
+  border: 1px solid #e8f5e9;
 }
 
 .loading-spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #ecf0f1;
-  border-top-color: #3498db;
+  border: 4px solid #e8f5e9;
+  border-top-color: #2e7d32;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -605,7 +636,7 @@
 }
 
 .loading-container p {
-  color: #7f8c8d;
+  color: #558b2f;
   font-size: 16px;
   margin: 0;
 }

@@ -1,3 +1,4 @@
+
 import dotenv from 'dotenv';
 dotenv.config(); 
 
@@ -9,38 +10,102 @@ import pkg from "pg";
 import { categoryKeywords } from "./categories.js";
 const { Pool } = pkg;
 
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ---------------------- ENHANCED CORS CONFIGURATION ----------------------
+
+const cors = require('cors');
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  process.env.FRONTEND_URL 
+].filter(Boolean); 
+
+const corsOptions = {
+  origin: function (origin, callback) {
+
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+    
+      console.warn(` CORS blocked origin: ${origin}`);
+      callback(null, true); 
+    }
+  },
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 // ---------------------- MIDDLEWARE ----------------------
 app.use(bodyParser.json());
-app.use(cors()); 
-// Add request logging for debugging
+
+
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, req.query);
   next();
 });
 
-// ---------------------- DATABASE ----------------------
+// ---------------------- DATABASE CONFIGURATION ----------------------
+
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
+  // Use DATABASE_URL if available (Render provides this automatically)
+  // Otherwise fall back to individual environment variables
+  connectionString: process.env.DATABASE_URL,
+  
+  // Fallback to individual vars if DATABASE_URL is not set
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
-  ssl: false, // disable SSL for localhost
+  
+  // SSL configuration - required for Render, optional for localhost
+  ssl: process.env.DATABASE_URL ? {
+    rejectUnauthorized: false // Required for Render PostgreSQL
+  } : false,
+  
+  // Connection pool settings
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
 
 export default pool;
 
+// Test database connection
 pool.connect((err, client, release) => {
-  if (err) console.error("DB connection error:", err.stack);
-  else {
-    console.log("Connected to PostgreSQL database");
+  if (err) {
+    console.error("DB connection error:", err.stack);
+    console.error("Check your .env file and database credentials");
+  } else {
+    console.log(" Connected to PostgreSQL database");
+    console.log(`Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+    console.log(`Database: ${process.env.DB_NAME || 'from DATABASE_URL'}`);
     release();
   }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received: closing HTTP server');
+  pool.end(() => {
+    console.log('Database pool closed');
+  });
 });
 
 // ---------------------- HELPER FUNCTIONS ----------------------
@@ -95,7 +160,6 @@ function buildCategorySearchQuery(keywords) {
     params: keywords.map(keyword => `%${keyword}%`)
   };
 }
-
 // ---------------------- ENHANCED USER AUTH ----------------------
 
 // Register as Buyer
