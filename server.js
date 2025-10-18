@@ -1677,67 +1677,67 @@ app.put("/api/user/profile/:userId", async (req, res) => {
     let paramCount = 1;
 
     if (fullName !== undefined) {
-      updates.push(`full_name = ${paramCount}`);
+      updates.push(`full_name = $${paramCount}`);  // Fixed: Added $ before ${paramCount}
       values.push(fullName);
       paramCount++;
     }
     
     if (gender !== undefined) {
-      updates.push(`gender = ${paramCount}`);
+      updates.push(`gender = $${paramCount}`);  // Fixed
       values.push(gender);
       paramCount++;
     }
     
     if (address !== undefined) {
-      updates.push(`address = ${paramCount}`);
+      updates.push(`address = $${paramCount}`);  // Fixed
       values.push(address);
       paramCount++;
     }
     
     if (phoneNumber !== undefined) {
-      updates.push(`phone_number = ${paramCount}`);
+      updates.push(`phone_number = $${paramCount}`);  // Fixed
       values.push(phoneNumber);
       paramCount++;
     }
     
     if (dateOfBirth !== undefined) {
-      updates.push(`date_of_birth = ${paramCount}`);
+      updates.push(`date_of_birth = $${paramCount}`);  // Fixed
       values.push(dateOfBirth);
       paramCount++;
     }
     
     if (pincode !== undefined) {
-      updates.push(`pincode = ${paramCount}`);
+      updates.push(`pincode = $${paramCount}`);  // Fixed
       values.push(pincode);
       paramCount++;
     }
     
     if (bloodGroup !== undefined) {
-      updates.push(`blood_group = ${paramCount}`);
+      updates.push(`blood_group = $${paramCount}`);  // Fixed
       values.push(bloodGroup);
       paramCount++;
     }
     
     if (conditions !== undefined) {
-      updates.push(`conditions = ${paramCount}`);
+      updates.push(`conditions = $${paramCount}`);  // Fixed
       values.push(conditions);
       paramCount++;
     }
     
     if (allergies !== undefined) {
-      updates.push(`allergies = ${paramCount}`);
+      updates.push(`allergies = $${paramCount}`);  // Fixed
       values.push(allergies);
       paramCount++;
     }
     
     if (medication !== undefined) {
-      updates.push(`medication = ${paramCount}`);
+      updates.push(`medication = $${paramCount}`);  // Fixed
       values.push(medication);
       paramCount++;
     }
     
     if (profileImage !== undefined) {
-      updates.push(`profile_image = ${paramCount}`);
+      updates.push(`profile_image = $${paramCount}`);  // Fixed
       values.push(profileImage);
       paramCount++;
     }
@@ -1752,7 +1752,7 @@ app.put("/api/user/profile/:userId", async (req, res) => {
     const query = `
       UPDATE users 
       SET ${updates.join(', ')} 
-      WHERE id = ${paramCount} 
+      WHERE id = $${paramCount}   
       RETURNING id, username, email, full_name, gender, address, phone_number, 
                 date_of_birth, pincode, blood_group, conditions, allergies, 
                 medication, profile_image, updated_at
