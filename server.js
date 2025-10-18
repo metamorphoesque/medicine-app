@@ -1544,63 +1544,7 @@ app.get("/api/healthcare/nearby", async (req, res) => {
   }
 });
 
-app.get("/api/healthcare/byState", async (req, res) => {
-  try {
-    const { state, type, limit = 20, pincode } = req.query;
 
-    const queryLimit = Math.min(parseInt(limit) || 20, 100);
-
-    let query = `
-      SELECT id, name, facility_type as type, state, address, phone, 
-             latitude, longitude, rating, opening_hours, doctor_category, pincode
-      FROM healthcare_facilities
-      WHERE 1=1
-    `;
-    const params = [];
-
-    if (state && state.trim() !== '') {
-      params.push(state.trim());
-      query += ` AND LOWER(state) = LOWER(${params.length})`;
-    }
-
-    if (pincode && pincode.trim() !== '') {
-      params.push(pincode.trim());
-      query += ` AND pincode = ${params.length}`;
-    }
-
-    if (type && type !== "all" && type.trim() !== '') {
-      params.push(type.trim());
-      query += ` AND (LOWER(facility_type) = LOWER(${params.length}) OR LOWER(doctor_category) = LOWER(${params.length}))`;
-    }
-
-    query += ` ORDER BY rating DESC NULLS LAST, name ASC LIMIT ${params.length + 1}`;
-    params.push(queryLimit);
-
-    const result = await pool.query(query, params);
-
-    const formattedResults = result.rows.map(facility => ({
-      ...facility,
-      rating: facility.rating || 0,
-      distance: 'N/A',
-      open: true
-    }));
-
-    res.json({ 
-      results: formattedResults,
-      total: formattedResults.length,
-      state: state || null,
-      type: type || 'all',
-      pincode: pincode || null
-    });
-
-  } catch (error) {
-    console.error("Error in healthcare byState:", error);
-    res.status(500).json({ 
-      error: "Internal server error", 
-      details: error.message 
-    });
-  }
-});
 
 app.get("/api/healthcare/debug", async (req, res) => {
   try {
