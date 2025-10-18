@@ -1,4 +1,3 @@
-
 import dotenv from 'dotenv';
 dotenv.config(); 
 
@@ -15,7 +14,6 @@ const PORT = process.env.PORT || 5000;
 
 // ---------------------- ENHANCED CORS CONFIGURATION ----------------------
 
-
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -25,13 +23,10 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-
-
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-    
-      console.warn(` CORS blocked origin: ${origin}`);
+      console.warn(`⚠️ CORS blocked origin: ${origin}`);
       callback(null, true); 
     }
   },
@@ -42,14 +37,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-
-// Handle preflight requests
 app.options('*', cors(corsOptions));
 
 // ---------------------- MIDDLEWARE ----------------------
 app.use(bodyParser.json());
-
 
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, req.query);
@@ -58,28 +49,19 @@ app.use((req, res, next) => {
 
 // ---------------------- DATABASE CONFIGURATION ----------------------
 
-
 const isProduction = process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
-  // Use DATABASE_URL if available (Render provides this automatically)
-  // Otherwise fall back to individual environment variables
   connectionString: process.env.DATABASE_URL,
-  
-  // Fallback to individual vars if DATABASE_URL is not set
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
-  
-  // SSL configuration - required for Render, optional for localhost
   ssl: process.env.DATABASE_URL ? {
-    rejectUnauthorized: false // Required for Render PostgreSQL
+    rejectUnauthorized: false
   } : false,
-  
-  // Connection pool settings
-  max: 20, // Maximum number of clients in the pool
+  max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
 });
@@ -89,7 +71,7 @@ export default pool;
 // Test database connection
 pool.connect((err, client, release) => {
   if (err) {
-    console.error("DB connection error:", err.stack);
+    console.error(" DB connection error:", err.stack);
     console.error("Check your .env file and database credentials");
   } else {
     console.log(" Connected to PostgreSQL database");
@@ -159,25 +141,22 @@ function buildCategorySearchQuery(keywords) {
     params: keywords.map(keyword => `%${keyword}%`)
   };
 }
-// ---------------------- ENHANCED USER AUTH ----------------------
 
-// Register as Buyer
+// ---------------------- USER AUTH ----------------------
+
 app.post("/api/register/buyer", async (req, res) => {
   try {
     const { username, email, password, fullName, dateOfBirth } = req.body;
-    
     
     if (!username || !email || !password) {
       return res.status(400).json({ error: "All fields required" });
     }
 
-    // Check if email exists
     const exists = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (exists.rows.length) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    // Validate age (must be 18+)
     if (dateOfBirth) {
       const today = new Date();
       const birth = new Date(dateOfBirth);
@@ -187,10 +166,7 @@ app.post("/api/register/buyer", async (req, res) => {
       }
     }
 
-    // Hash password
     const hash = await bcrypt.hash(password, 10);
-    
-    // Insert user
       
     const result = await pool.query(
       `INSERT INTO users (username, email, password_hash, user_role, full_name, date_of_birth) 
@@ -209,7 +185,6 @@ app.post("/api/register/buyer", async (req, res) => {
   }
 });
 
-// Register as Seller
 app.post("/api/register/seller", async (req, res) => {
   try {
     const { 
@@ -229,22 +204,17 @@ app.post("/api/register/seller", async (req, res) => {
       });
     }
 
-    // Check if email exists
     const exists = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (exists.rows.length) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    // Hash password
     const hash = await bcrypt.hash(password, 10);
-    
-    // Start transaction
     const client = await pool.connect();
     
     try {
       await client.query('BEGIN');
       
-      // Create seller record first
       const sellerResult = await client.query(
         `INSERT INTO sellers (name, business_name, license_number, gstin, address, phone, email, verification_status) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending') 
@@ -254,7 +224,6 @@ app.post("/api/register/seller", async (req, res) => {
       
       const sellerId = sellerResult.rows[0].id;
       
-      // Create user record linked to seller
       const userResult = await client.query(
         `INSERT INTO users (username, email, password_hash, user_role, seller_id) 
          VALUES ($1, $2, $3, 'seller', $4) 
@@ -281,9 +250,6 @@ app.post("/api/register/seller", async (req, res) => {
   }
 });
 
-// Unified Login with Role Detection
-// In your server.js, replace the login endpoint:
-
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -292,7 +258,6 @@ app.post("/api/login", async (req, res) => {
       return res.status(400).json({ error: "Email and password required" });
     }
 
-    // Fetch user with seller info if applicable
     const result = await pool.query(`
       SELECT u.*, s.verification_status as seller_verification_status,
              s.business_name, s.id as seller_id_from_table
@@ -307,24 +272,11 @@ app.post("/api/login", async (req, res) => {
 
     const user = result.rows[0];
     
-    // Check password
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
-    // TEMPORARILY ALLOW UNVERIFIED SELLERS TO LOGIN
-    // Comment out this block to skip verification check
-    /*
-    if (user.user_role === 'seller' && user.seller_verification_status !== 'verified') {
-      return res.status(403).json({ 
-        error: "Your seller account is pending verification. Please wait for admin approval.",
-        status: 'pending_verification'
-      });
-    }
-    */
-
-    // Return user data
     res.json({ 
       message: "Login successful", 
       user: {
@@ -343,7 +295,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Get seller verification status
 app.get("/api/seller/status/:sellerId", async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -367,7 +318,6 @@ app.get("/api/seller/status/:sellerId", async (req, res) => {
 
 // ---------------------- SELLER INVENTORY MANAGEMENT ----------------------
 
-// Get seller's inventory
 app.get("/api/seller/:sellerId/inventory", async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -396,7 +346,6 @@ app.get("/api/seller/:sellerId/inventory", async (req, res) => {
 
     const result = await pool.query(query, params);
 
-    // Get total count
     let countQuery = `
       SELECT COUNT(*) as total
       FROM seller_medicines sm
@@ -428,7 +377,6 @@ app.get("/api/seller/:sellerId/inventory", async (req, res) => {
   }
 });
 
-// Add medicine to seller's inventory
 app.post("/api/seller/:sellerId/inventory", async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -440,7 +388,6 @@ app.post("/api/seller/:sellerId/inventory", async (req, res) => {
       });
     }
 
-    // Check if already exists
     const existing = await pool.query(
       "SELECT * FROM seller_medicines WHERE seller_id = $1 AND medicine_id = $2",
       [sellerId, medicine_id]
@@ -468,7 +415,6 @@ app.post("/api/seller/:sellerId/inventory", async (req, res) => {
   }
 });
 
-// Update inventory item (price/stock)
 app.put("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
   try {
     const { sellerId, itemId } = req.params;
@@ -520,7 +466,6 @@ app.put("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
   }
 });
 
-// Delete from inventory
 app.delete("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
   try {
     const { sellerId, itemId } = req.params;
@@ -541,7 +486,6 @@ app.delete("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
   }
 });
 
-// Search medicines to add to inventory
 app.get("/api/seller/:sellerId/search-medicines", async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -554,7 +498,6 @@ app.get("/api/seller/:sellerId/search-medicines", async (req, res) => {
 
     const searchParam = `%${search.trim()}%`;
     
-    // Find medicines NOT in seller's inventory
     const query = `
       SELECT m.*, c.name as category_name,
              COALESCE(m.manufacturer_name, m.generic, 'Unknown') as manufacturer_name
@@ -570,7 +513,6 @@ app.get("/api/seller/:sellerId/search-medicines", async (req, res) => {
 
     const result = await pool.query(query, [searchParam, sellerId, parseInt(limit), offset]);
 
-    // Get count
     const countQuery = `
       SELECT COUNT(*) as total
       FROM medicines m
@@ -598,24 +540,20 @@ app.get("/api/seller/:sellerId/search-medicines", async (req, res) => {
   }
 });
 
-// Get seller dashboard stats
 app.get("/api/seller/:sellerId/stats", async (req, res) => {
   try {
     const { sellerId } = req.params;
 
-    // Get total products
     const productsResult = await pool.query(
       "SELECT COUNT(*) as total FROM seller_medicines WHERE seller_id = $1",
       [sellerId]
     );
 
-    // Get low stock items (stock < 10)
     const lowStockResult = await pool.query(
       "SELECT COUNT(*) as total FROM seller_medicines WHERE seller_id = $1 AND stock < 10",
       [sellerId]
     );
 
-    // Get out of stock items
     const outOfStockResult = await pool.query(
       "SELECT COUNT(*) as total FROM seller_medicines WHERE seller_id = $1 AND stock = 0",
       [sellerId]
@@ -625,7 +563,7 @@ app.get("/api/seller/:sellerId/stats", async (req, res) => {
       totalProducts: parseInt(productsResult.rows[0].total),
       lowStock: parseInt(lowStockResult.rows[0].total),
       outOfStock: parseInt(outOfStockResult.rows[0].total),
-      totalOrders: 0, // Placeholder for future orders feature
+      totalOrders: 0,
       pendingOrders: 0,
       revenue: 0
     });
@@ -696,8 +634,6 @@ app.get("/api/medicines", async (req, res) => {
     const { search, page = 1, limit = 20, category: categorySlug } = req.query;
     const offset = (page - 1) * limit;
     
-    console.log('Fetching medicines with params:', { search, page, limit, category: categorySlug });
-    
     let query = `
       SELECT m.*, COALESCE(m.manufacturer_name,m.generic,'Unknown') as manufacturer_name,
       c.name as category_name, c.slug as category_slug
@@ -707,11 +643,8 @@ app.get("/api/medicines", async (req, res) => {
     `;
     let params = [];
 
-    // Handle category-based filtering
     if (categorySlug && categorySlug !== 'all' && categorySlug !== '') {
-      console.log('Filtering by category:', categorySlug);
       const keywords = getKeywordsForCategory(categorySlug);
-      console.log('Category keywords:', keywords);
       
       if (keywords.length > 0) {
         const categorySearch = buildCategorySearchQuery(keywords);
@@ -720,7 +653,6 @@ app.get("/api/medicines", async (req, res) => {
       }
     }
 
-    // Handle text search
     if (search && search.trim() !== '') {
       const searchParam = `%${search.trim()}%`;
       params.push(searchParam);
@@ -734,12 +666,8 @@ app.get("/api/medicines", async (req, res) => {
     query += ` ORDER BY m.name ASC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(parseInt(limit), offset);
 
-    console.log('Final query:', query);
-    console.log('Query params:', params);
-
     const medicinesResult = await pool.query(query, params);
     
-    // Get total count for pagination
     let countQuery = `
       SELECT COUNT(*) as total
       FROM medicines m
@@ -748,7 +676,6 @@ app.get("/api/medicines", async (req, res) => {
     `;
     let countParams = [];
 
-    // Apply same filters for count
     if (categorySlug && categorySlug !== 'all' && categorySlug !== '') {
       const keywords = getKeywordsForCategory(categorySlug);
       if (keywords.length > 0) {
@@ -771,8 +698,6 @@ app.get("/api/medicines", async (req, res) => {
     const countResult = await pool.query(countQuery, countParams);
     const total = parseInt(countResult.rows[0].total);
 
-    console.log(`Found ${medicinesResult.rows.length} medicines, total: ${total}`);
-
     res.json({ 
       medicines: medicinesResult.rows,
       pagination: {
@@ -788,13 +713,10 @@ app.get("/api/medicines", async (req, res) => {
   }
 });
 
-// ------------SIMILAR MEDICINE-------------
-
 app.get("/api/medicines/:id/similar", async (req, res) => {
   try {
     const medicineId = req.params.id;
     
-    // First, get the current medicine's details
     const medicineResult = await pool.query(`
       SELECT symptoms, composition, generic, category
       FROM medicines
@@ -807,7 +729,6 @@ app.get("/api/medicines/:id/similar", async (req, res) => {
 
     const currentMedicine = medicineResult.rows[0];
     
-    // Build a query to find similar medicines based on symptoms, composition, or generic name
     let query = `
       SELECT m.*, COALESCE(m.manufacturer_name, m.generic, 'Unknown') as manufacturer_name,
              c.name as category_name, c.slug as category_slug
@@ -818,7 +739,6 @@ app.get("/api/medicines/:id/similar", async (req, res) => {
     const params = [medicineId];
     const conditions = [];
 
-    // Add similarity conditions
     if (currentMedicine.symptoms) {
       params.push(`%${currentMedicine.symptoms}%`);
       conditions.push(`m.symptoms ILIKE $${params.length}`);
@@ -839,12 +759,10 @@ app.get("/api/medicines/:id/similar", async (req, res) => {
       conditions.push(`m.category = $${params.length}`);
     }
 
-    // If we have any conditions, add them with OR
     if (conditions.length > 0) {
       query += ` AND (${conditions.join(' OR ')})`;
     }
 
-    // Order by doctor rating and limit results
     query += ` ORDER BY m.doctor_rating DESC NULLS LAST, m.name ASC LIMIT 10`;
 
     const result = await pool.query(query, params);
@@ -928,10 +846,6 @@ app.get("/api/seller-medicines", async (req, res) => {
   try {
     const { seller_id, medicine_id } = req.query;
 
-    console.log('=== Fetching Seller Medicines ===');
-    console.log('seller_id:', seller_id);
-    console.log('medicine_id:', medicine_id);
-
     let query = `
       SELECT 
         sm.id,
@@ -955,35 +869,26 @@ app.get("/api/seller-medicines", async (req, res) => {
 
     if (seller_id) {
       params.push(seller_id);
-      query += ` AND sm.seller_id = $${params.length}`;
+      query += ` AND sm.seller_id = ${params.length}`;
     }
 
     if (medicine_id) {
       params.push(medicine_id);
-      query += ` AND sm.medicine_id = $${params.length}`;
+      query += ` AND sm.medicine_id = ${params.length}`;
     }
 
     query += ` ORDER BY sm.price ASC`;
 
-    console.log('Query:', query);
-    console.log('Params:', params);
-
     const result = await pool.query(query, params);
-    
-    console.log('Found sellers:', result.rows.length);
-    if (result.rows.length > 0) {
-      console.log('Sample result:', result.rows[0]);
-    }
-
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching seller medicines:", err);
     res.status(500).json({ error: err.message });
   }
 });
+
 // ---------------------- PRESCRIPTIONS ----------------------
 
-// Upload prescription
 app.post("/api/prescriptions", async (req, res) => {
   try {
     const { 
@@ -1001,7 +906,6 @@ app.post("/api/prescriptions", async (req, res) => {
       });
     }
 
-    // Calculate expiry date (30 days from issue)
     const issueDate = issue_date ? new Date(issue_date) : new Date();
     const expiryDate = new Date(issueDate);
     expiryDate.setDate(expiryDate.getDate() + 30);
@@ -1026,7 +930,6 @@ app.post("/api/prescriptions", async (req, res) => {
   }
 });
 
-// Get user's prescriptions
 app.get("/api/prescriptions/user/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1053,7 +956,6 @@ app.get("/api/prescriptions/user/:userId", async (req, res) => {
   }
 });
 
-// Get prescription by ID
 app.get("/api/prescriptions/:id", async (req, res) => {
   try {
     const result = await pool.query(
@@ -1075,7 +977,6 @@ app.get("/api/prescriptions/:id", async (req, res) => {
   }
 });
 
-// Verify prescription (seller)
 app.put("/api/prescriptions/:id/verify", async (req, res) => {
   try {
     const { id } = req.params;
@@ -1112,7 +1013,6 @@ app.put("/api/prescriptions/:id/verify", async (req, res) => {
 
 // ---------------------- ORDERS ----------------------
 
-// Create order
 app.post("/api/orders", async (req, res) => {
   try {
     const { buyer_id, seller_id, items, shipping_address, total_amount } = req.body;
@@ -1128,10 +1028,8 @@ app.post("/api/orders", async (req, res) => {
     try {
       await client.query('BEGIN');
 
-      // Generate order number
       const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-      // Create order
       const orderResult = await client.query(
         `INSERT INTO orders 
          (order_number, buyer_id, seller_id, total_amount, shipping_address)
@@ -1142,10 +1040,8 @@ app.post("/api/orders", async (req, res) => {
 
       const orderId = orderResult.rows[0].id;
 
-      // Check if any items require prescription
       let requiresPrescription = false;
       
-      // Insert order items
       for (const item of items) {
         const medicineCheck = await client.query(
           'SELECT prescription_required FROM medicines WHERE id = $1',
@@ -1172,7 +1068,6 @@ app.post("/api/orders", async (req, res) => {
           ]
         );
 
-        // Update stock
         await client.query(
           `UPDATE seller_medicines 
            SET stock = stock - $1 
@@ -1181,7 +1076,6 @@ app.post("/api/orders", async (req, res) => {
         );
       }
 
-      // Update prescription_verified status
       if (requiresPrescription) {
         await client.query(
           'UPDATE orders SET prescription_verified = FALSE WHERE id = $1',
@@ -1194,7 +1088,6 @@ app.post("/api/orders", async (req, res) => {
         );
       }
 
-      // Clear cart items
       await client.query(
         'DELETE FROM cart_items WHERE user_id = $1 AND seller_id = $2',
         [buyer_id, seller_id]
@@ -1219,7 +1112,6 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-// Get buyer's orders
 app.get("/api/orders/buyer/:buyerId", async (req, res) => {
   try {
     const { buyerId } = req.params;
@@ -1243,7 +1135,6 @@ app.get("/api/orders/buyer/:buyerId", async (req, res) => {
   }
 });
 
-// Get seller's orders
 app.get("/api/orders/seller/:sellerId", async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -1261,7 +1152,7 @@ app.get("/api/orders/seller/:sellerId", async (req, res) => {
 
     if (status) {
       params.push(status);
-      query += ` AND o.order_status = $${params.length}`;
+      query += ` AND o.order_status = ${params.length}`;
     }
 
     query += ` GROUP BY o.id, u.username, u.email ORDER BY o.created_at DESC`;
@@ -1274,7 +1165,6 @@ app.get("/api/orders/seller/:sellerId", async (req, res) => {
   }
 });
 
-// Get order details
 app.get("/api/orders/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -1315,7 +1205,6 @@ app.get("/api/orders/:orderId", async (req, res) => {
   }
 });
 
-// Update order status
 app.put("/api/orders/:orderId/status", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -1347,13 +1236,11 @@ app.put("/api/orders/:orderId/status", async (req, res) => {
   }
 });
 
-// Cancel order (buyer)
 app.put("/api/orders/:orderId/cancel", async (req, res) => {
   try {
     const { orderId } = req.params;
     const { buyer_id } = req.body;
 
-    // Verify order belongs to buyer
     const orderCheck = await pool.query(
       "SELECT * FROM orders WHERE id = $1 AND buyer_id = $2",
       [orderId, buyer_id]
@@ -1365,14 +1252,12 @@ app.put("/api/orders/:orderId/cancel", async (req, res) => {
 
     const order = orderCheck.rows[0];
 
-    // Only allow cancellation if order is pending or confirmed
     if (!['pending', 'confirmed'].includes(order.order_status)) {
       return res.status(400).json({ 
         error: "Order cannot be cancelled at this stage" 
       });
     }
 
-    // Update order status
     const result = await pool.query(
       `UPDATE orders 
        SET order_status = 'cancelled', updated_at = CURRENT_TIMESTAMP 
@@ -1381,7 +1266,6 @@ app.put("/api/orders/:orderId/cancel", async (req, res) => {
       [orderId]
     );
 
-    // Restore stock
     const items = await pool.query(
       `SELECT seller_medicine_id, quantity 
        FROM order_items 
@@ -1408,7 +1292,6 @@ app.put("/api/orders/:orderId/cancel", async (req, res) => {
   }
 });
 
-// Get order statistics for seller
 app.get("/api/seller/:sellerId/order-stats", async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -1435,17 +1318,15 @@ app.get("/api/seller/:sellerId/order-stats", async (req, res) => {
   }
 });
 
-// Add tracking information to order
 app.put("/api/orders/:orderId/tracking", async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { tracking_number, carrier } = req.body;
+    const { tracking_number } = req.body;
 
     if (!tracking_number) {
       return res.status(400).json({ error: "Tracking number is required" });
     }
 
-    // Note: You'll need to add tracking_number and carrier columns to orders table
     const result = await pool.query(
       `UPDATE orders 
        SET order_status = 'shipped', 
@@ -1469,7 +1350,6 @@ app.put("/api/orders/:orderId/tracking", async (req, res) => {
   }
 });
 
-// Verify order prescription (seller confirms prescription is valid)
 app.put("/api/orders/:orderId/verify-prescription", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -1616,7 +1496,7 @@ app.get("/api/healthcare/nearby", async (req, res) => {
       params.push(type);
     }
 
-    query += ` HAVING distance_km <= $${params.length + 1} ORDER BY distance_km ASC LIMIT 50`;
+    query += ` HAVING distance_km <= ${params.length + 1} ORDER BY distance_km ASC LIMIT 50`;
     params.push(parseFloat(radius));
 
     const result = await pool.query(query, params);
@@ -1630,12 +1510,6 @@ app.get("/api/healthcare/nearby", async (req, res) => {
 app.get("/api/healthcare/byState", async (req, res) => {
   try {
     const { state, type, limit = 20, pincode } = req.query;
-    
-    console.log('=== Healthcare Search Request ===');
-    console.log('State:', state);
-    console.log('Type:', type);
-    console.log('Pincode:', pincode);
-    console.log('Limit:', limit);
 
     const queryLimit = Math.min(parseInt(limit) || 20, 100);
 
@@ -1647,49 +1521,25 @@ app.get("/api/healthcare/byState", async (req, res) => {
     `;
     const params = [];
 
-    // Add state filter (only if provided)
     if (state && state.trim() !== '') {
       params.push(state.trim());
-      query += ` AND LOWER(state) = LOWER($${params.length})`;
+      query += ` AND LOWER(state) = LOWER(${params.length})`;
     }
 
-    // Add pincode filter (only if provided)
     if (pincode && pincode.trim() !== '') {
       params.push(pincode.trim());
-      query += ` AND pincode = $${params.length}`;
+      query += ` AND pincode = ${params.length}`;
     }
 
-    // Add type filter (only if provided and not 'all')
     if (type && type !== "all" && type.trim() !== '') {
       params.push(type.trim());
-      query += ` AND (LOWER(facility_type) = LOWER($${params.length}) OR LOWER(doctor_category) = LOWER($${params.length}))`;
+      query += ` AND (LOWER(facility_type) = LOWER(${params.length}) OR LOWER(doctor_category) = LOWER(${params.length}))`;
     }
 
-    query += ` ORDER BY rating DESC NULLS LAST, name ASC LIMIT $${params.length + 1}`;
+    query += ` ORDER BY rating DESC NULLS LAST, name ASC LIMIT ${params.length + 1}`;
     params.push(queryLimit);
 
-    console.log('=== SQL Query ===');
-    console.log('Query:', query);
-    console.log('Params:', params);
-
     const result = await pool.query(query, params);
-
-    console.log('=== Query Results ===');
-    console.log('Found records:', result.rows.length);
-    
-    if (result.rows.length > 0) {
-      console.log('Sample result:', result.rows[0]);
-    } else {
-      // If no results, let's check what's in the database
-      const debugQuery = `
-        SELECT DISTINCT state, facility_type, COUNT(*) as count
-        FROM healthcare_facilities
-        GROUP BY state, facility_type
-        ORDER BY state, facility_type
-      `;
-      const debugResult = await pool.query(debugQuery);
-      console.log('Available data in database:', debugResult.rows);
-    }
 
     const formattedResults = result.rows.map(facility => ({
       ...facility,
@@ -1714,12 +1564,6 @@ app.get("/api/healthcare/byState", async (req, res) => {
     });
   }
 });
-// fetch  similar medicines endpoint here
-// Alias without /api prefix for backward compatibility
-app.get("/healthcare/byState", async (req, res) => {
-  req.url = '/api' + req.url;
-  return app._router.handle(req, res);
-});
 
 app.get("/api/healthcare/debug", async (req, res) => {
   try {
@@ -1740,12 +1584,10 @@ app.get("/api/healthcare/debug", async (req, res) => {
     console.error("Debug endpoint error:", error);
     res.status(500).json({ error: error.message });
   }
-}
-);
-// ---------------------- USER PROFILE ENDPOINTS ----------------------
-// Add these endpoints to your existing server.js file
+});
 
-// Get user profile
+// ---------------------- USER PROFILE ENDPOINTS ----------------------
+
 app.get("/api/user/profile/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1764,7 +1606,6 @@ app.get("/api/user/profile/:userId", async (req, res) => {
 
     const user = result.rows[0];
     
-    // Format the response to match frontend expectations
     const formattedUser = {
       id: user.id,
       username: user.username,
@@ -1790,7 +1631,6 @@ app.get("/api/user/profile/:userId", async (req, res) => {
   }
 });
 
-// Update user profile
 app.put("/api/user/profile/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1808,7 +1648,6 @@ app.put("/api/user/profile/:userId", async (req, res) => {
       profileImage
     } = req.body;
 
-    // Validate age if date of birth is provided
     if (dateOfBirth) {
       const today = new Date();
       const birth = new Date(dateOfBirth);
@@ -1825,65 +1664,62 @@ app.put("/api/user/profile/:userId", async (req, res) => {
       }
     }
 
-    // Validate phone number (Indian format)
     if (phoneNumber && (phoneNumber.length !== 10 || !/^\d{10}$/.test(phoneNumber))) {
       return res.status(400).json({ error: "Please enter a valid 10-digit phone number" });
     }
 
-    // Validate pincode (Indian format)
     if (pincode && (pincode.length !== 6 || !/^\d{6}$/.test(pincode))) {
       return res.status(400).json({ error: "Please enter a valid 6-digit pincode" });
     }
 
-    // Build dynamic update query
     const updates = [];
     const values = [];
     let paramCount = 1;
 
     if (fullName !== undefined) {
-      updates.push(`full_name = $${paramCount}`);
+      updates.push(`full_name = ${paramCount}`);
       values.push(fullName);
       paramCount++;
     }
     
     if (gender !== undefined) {
-      updates.push(`gender = $${paramCount}`);
+      updates.push(`gender = ${paramCount}`);
       values.push(gender);
       paramCount++;
     }
     
     if (address !== undefined) {
-      updates.push(`address = $${paramCount}`);
+      updates.push(`address = ${paramCount}`);
       values.push(address);
       paramCount++;
     }
     
     if (phoneNumber !== undefined) {
-      updates.push(`phone_number = $${paramCount}`);
+      updates.push(`phone_number = ${paramCount}`);
       values.push(phoneNumber);
       paramCount++;
     }
     
     if (dateOfBirth !== undefined) {
-      updates.push(`date_of_birth = $${paramCount}`);
+      updates.push(`date_of_birth = ${paramCount}`);
       values.push(dateOfBirth);
       paramCount++;
     }
     
     if (pincode !== undefined) {
-      updates.push(`pincode = $${paramCount}`);
+      updates.push(`pincode = ${paramCount}`);
       values.push(pincode);
       paramCount++;
     }
     
     if (bloodGroup !== undefined) {
-      updates.push(`blood_group = $${paramCount}`);
+      updates.push(`blood_group = ${paramCount}`);
       values.push(bloodGroup);
       paramCount++;
     }
     
     if (conditions !== undefined) {
-      updates.push(`conditions = $${paramCount}`);
+      updates.push(`conditions = ${paramCount}`);
       values.push(conditions);
       paramCount++;
     }
@@ -1910,7 +1746,6 @@ app.put("/api/user/profile/:userId", async (req, res) => {
       return res.status(400).json({ error: "No fields to update" });
     }
 
-    // Add updated_at timestamp
     updates.push(`updated_at = CURRENT_TIMESTAMP`);
     values.push(userId);
 
@@ -1931,7 +1766,6 @@ app.put("/api/user/profile/:userId", async (req, res) => {
 
     const user = result.rows[0];
     
-    // Format the response to match frontend expectations
     const formattedUser = {
       id: user.id,
       username: user.username,
@@ -1961,11 +1795,10 @@ app.put("/api/user/profile/:userId", async (req, res) => {
   }
 });
 
-// Upload profile image endpoint (optional - for handling file uploads)
 app.post("/api/user/profile/:userId/image", async (req, res) => {
   try {
     const { userId } = req.params;
-    const { imageUrl } = req.body; // This would be the uploaded image URL
+    const { imageUrl } = req.body;
     
     const result = await pool.query(
       "UPDATE users SET profile_image = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING profile_image",
@@ -1987,8 +1820,6 @@ app.post("/api/user/profile/:userId/image", async (req, res) => {
   }
 });
 
-// Add this endpoint to your server.js file
-
 // ---------------------- LAB TESTS ----------------------
 app.get("/api/lab-tests", async (req, res) => {
   try {
@@ -1999,7 +1830,7 @@ app.get("/api/lab-tests", async (req, res) => {
     
     if (category && category !== 'all') {
       params.push(category);
-      query += ` AND category = $${params.length}`;
+      query += ` AND category = ${params.length}`;
     }
     
     query += ` ORDER BY name ASC`;
@@ -2012,7 +1843,6 @@ app.get("/api/lab-tests", async (req, res) => {
   }
 });
 
-// Get lab packages
 app.get("/api/lab-packages", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -2043,28 +1873,60 @@ app.get("/api/lab-packages", async (req, res) => {
 app.get("/", (req, res) => {
   res.json({ 
     message: "Medicine App Server is running!",
+    version: "1.0.0",
+    status: "healthy",
     endpoints: {
-      auth: ["/api/register", "/api/login"],
-      medicines: ["/api/medicines", "/api/medicines/:id"],
+      auth: ["/api/register/buyer", "/api/register/seller", "/api/login"],
+      medicines: ["/api/medicines", "/api/medicines/:id", "/api/medicines/:id/similar"],
       categories: ["/api/categories", "/api/category-buttons"],
-      sellers: ["/api/sellers", "/api/seller-medicines"],
+      sellers: ["/api/sellers", "/api/seller-medicines", "/api/seller/:sellerId/inventory"],
       cart: ["/api/cart", "/api/cart/:userId"],
-      healthcare: ["/api/healthcare", "/api/healthcare/nearby", "/api/healthcare/byState"]
+      orders: ["/api/orders", "/api/orders/buyer/:buyerId", "/api/orders/seller/:sellerId"],
+      prescriptions: ["/api/prescriptions", "/api/prescriptions/user/:userId"],
+      healthcare: ["/api/healthcare", "/api/healthcare/nearby", "/api/healthcare/byState"],
+      profile: ["/api/user/profile/:userId"],
+      labs: ["/api/lab-tests", "/api/lab-packages"]
     }
+  });
+});
+
+// Health check endpoint for monitoring
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
 // ---------------------- ERROR HANDLER ----------------------
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
+  });
+});
+
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Not Found',
+    message: `Route ${req.method} ${req.path} not found`
+  });
 });
 
 // ---------------------- START SERVER ----------------------
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Available endpoints:`);
-  console.log(`  GET /api/category-buttons - Get category buttons for frontend`);
-  console.log(`  GET /api/medicines?category=heart-blood-pressure-care - Get medicines by category`);
-  console.log(`  GET /api/healthcare/byState?state=California&type=hospital - Get healthcare facilities`);
+  console.log(`\n Server running on port ${PORT}`);
+  console.log(` Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+  console.log(`\n Available endpoints:`);
+  console.log(`   GET  / - API information`);
+  console.log(`   GET  /health - Health check`);
+  console.log(`   GET  /api/medicines - Get medicines`);
+  console.log(`   GET  /api/categories - Get categories`);
+  console.log(`   GET  /api/healthcare/byState - Get healthcare facilities`);
+  console.log(`   POST /api/register/buyer - Register buyer`);
+  console.log(`   POST /api/register/seller - Register seller`);
+  console.log(`   POST /api/login - Login\n`);
 });
