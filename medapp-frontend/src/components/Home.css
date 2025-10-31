@@ -19,7 +19,6 @@
   position: relative;
   overflow: hidden;
   margin: 20px 0;
-  /* TRANSPARENCY: Change rgba values (0.9, 0.8) to adjust banner background transparency */
   background: linear-gradient(135deg, rgba(11, 104, 53, 0.1), rgba(8, 134, 99, 0.23));
   border-radius: 15px;
   backdrop-filter: blur(10px);
@@ -54,13 +53,11 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
-  /* TRANSPARENCY: Change rgba 0.3 value to adjust banner shadow transparency */
   box-shadow: 0 4px 15px rgba(11, 104, 53, 0.3);
 }
 
 .banner-item:hover {
   transform: translateY(-5px);
-  /* TRANSPARENCY: Change rgba 0.4 value to adjust hover shadow transparency */
   box-shadow: 0 8px 25px rgba(11, 104, 53, 0.4);
 }
 
@@ -75,7 +72,6 @@
   font-size: 16px;
   margin: 0;
   text-align: center;
-  /* TRANSPARENCY: Change opacity value (0.9) to adjust text transparency */
   opacity: 0.9;
 }
 
@@ -86,7 +82,6 @@
   font-size: 30px;
   font-weight: bold;
   color: #0b6835;
-  /* TRANSPARENCY: Change rgba 0.9 value to adjust arrow background transparency */
   background: rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   cursor: pointer;
@@ -94,7 +89,6 @@
   user-select: none;
   transition: all 0.3s ease;
   z-index: 10;
-  /* TRANSPARENCY: Change rgba 0.2 value to adjust arrow shadow transparency */
   box-shadow: 0 4px 12px rgba(11, 104, 53, 0.2);
 }
 
@@ -109,114 +103,6 @@
 
 .banner-arrow.right {
   right: 20px;
-}
-
-/* Location Filter with Dropdown */
-.location-container {
-  position: relative;
-  margin-bottom: 30px;
-}
-
-.location-filter {
-  width: 300px;
-  height: 50px;
-  background: white;
-  border: 2px solid #0b6835;
-  border-radius: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  /* TRANSPARENCY: Change rgba 0.1 value to adjust location filter shadow transparency */
-  box-shadow: 0 4px 15px rgba(11, 104, 53, 0.1);
-}
-
-.location-filter:hover {
-  transform: translateY(-2px);
-  /* TRANSPARENCY: Change rgba 0.2 value to adjust hover shadow transparency */
-  box-shadow: 0 6px 20px rgba(11, 104, 53, 0.2);
-  border-color: #0e7a42;
-}
-
-.location-icon {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-.location-filter span {
-  color: #0b6835;
-  font-weight: 600;
-  font-size: 14px;
-  flex-grow: 1;
-  margin-left: 12px;
-}
-
-.dropdown-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-}
-
-.location-filter.open .dropdown-icon {
-  transform: rotate(180deg);
-}
-
-/* Location Dropdown */
-.location-dropdown {
-  position: absolute;
-  top: 60px;
-  left: 0;
-  right: 0;
-  background: white;
-  border: 2px solid #0b6835;
-  border-radius: 15px;
-  /* TRANSPARENCY: Change rgba 0.2 value to adjust dropdown shadow transparency */
-  box-shadow: 0 8px 25px rgba(11, 104, 53, 0.2);
-  z-index: 100;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.dropdown-item {
-  padding: 12px 20px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.dropdown-item:last-child {
-  border-bottom: none;
-}
-
-.dropdown-item:hover {
-  background-color: #f8f9fa;
-}
-
-.dropdown-item.current-location {
-  color: #0b6835;
-  font-weight: 600;
-}
-
-/* Location Error Message */
-.location-error-message {
-  width: 100%;
-  /* TRANSPARENCY: Change rgba 0.1 value to adjust error background transparency */
-  background: rgba(255, 193, 7, 0.1);
-  border: 2px solid #ffc107;
-  border-radius: 10px;
-  padding: 15px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.location-error-message p {
-  color: #856404;
-  font-weight: 600;
-  margin: 0;
 }
 
 /* NEW SECTION STYLING */
@@ -251,7 +137,6 @@
 .new-section-container {
   width: 100%;
   min-height: 200px;
-  /* TRANSPARENCY: Change rgba 0.2 value to adjust container background transparency */
   background: rgba(5, 97, 25, 0.15);
   border-radius: 15px;
   padding: 20px;
@@ -260,7 +145,6 @@
   align-items: center;
   position: relative;
   backdrop-filter: blur(5px);
-  /* TRANSPARENCY: Change rgba 0.1 value to adjust container shadow transparency */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   transition: min-height 0.3s ease;
 }
@@ -269,7 +153,7 @@
   min-height: auto;
 }
 
-/* Categories Grid - Updated for spacing */
+/* Categories Grid */
 .categories-grid {
   width: 100%;
   display: flex;
@@ -289,43 +173,6 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 30px;
   justify-items: center;
-}
-
-.new-items-scroll {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: #0b6835 #e0e0e0;
-  margin-bottom: 15px;
-}
-
-.new-items-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.new-items-scroll::-webkit-scrollbar-track {
-  /* TRANSPARENCY: Change rgba 0.3 value to adjust scrollbar track transparency */
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
-}
-
-.new-items-scroll::-webkit-scrollbar-thumb {
-  background: #0b6835;
-  border-radius: 10px;
-}
-
-.new-items-scroll::-webkit-scrollbar-thumb:hover {
-  background: #088663;
-}
-
-.new-items-row {
-  display: flex;
-  gap: 25px;
-  align-items: center;
-  min-width: max-content;
-  padding: 10px 0;
 }
 
 .new-item {
@@ -357,18 +204,15 @@
 
 .new-item-button:hover {
   transform: translateY(-5px) scale(1.05);
-  /* TRANSPARENCY: Change rgba 0.2 value to adjust button hover shadow transparency */
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .new-item-button.active {
   transform: translateY(-5px) scale(1.1);
-  /* TRANSPARENCY: Change rgba 0.3 value to adjust active button shadow transparency */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .new-item-button:disabled {
-  /* TRANSPARENCY: Change opacity value (0.6) to adjust disabled button transparency */
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -422,100 +266,10 @@
 .new-see-more-btn:hover {
   background: #088663;
   transform: translateY(-2px);
-  /* TRANSPARENCY: Change rgba 0.3 value to adjust see more button hover shadow transparency */
   box-shadow: 0 4px 15px rgba(11, 104, 53, 0.3);
 }
 
-/* Lab Tests Section - Updated */
-.lab-test-container {
-  width: 100%;
-  height: 300px;
-  /* TRANSPARENCY: Change rgba 0.2 value to adjust lab test container background transparency */
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 15px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  backdrop-filter: blur(5px);
-  /* TRANSPARENCY: Change rgba 0.1 value to adjust lab test container shadow transparency */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.lab-test-slideshow {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-  border-radius: 10px;
-  margin-bottom: 0;
-}
-
-.lab-test-slide {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transform: translateX(100%);
-  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
-  cursor: pointer;
-}
-
-.lab-test-slide.active {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.lab-test-slide.prev {
-  transform: translateX(-100%);
-}
-
-.lab-test-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-.lab-test-btn {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 10;
-  background: #0b6835;
-}
-
-/* Healthcare Section Specific - Updated */
-.healthcare-section {
-  min-height: 180px;
-}
-
-.healthcare-types-grid {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: nowrap;
-}
-
-.healthcare-types-grid .new-item {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Healthcare Results */
-.healthcare-results {
-  width: 85%;
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 15px;
-  /* TRANSPARENCY: Change rgba 0.1 value to adjust healthcare results shadow transparency */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
+/* Loading Spinner */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -540,161 +294,99 @@
   100% { transform: rotate(360deg); }
 }
 
-.facilities-container {
-  position: relative;
-}
-
-.facilities-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+/* Medicines Grid - For Top Doctors Preference & Popular Medicines */
+.medicines-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
   margin-bottom: 20px;
+  padding: 10px;
 }
 
-.facility-card {
-  background: #f8f9fa;
+.medicine-card {
+  background: white;
   border-radius: 12px;
   padding: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
-  height: 80px;
-}
-
-.facility-card:hover {
-  transform: translateY(-2px);
-  /* TRANSPARENCY: Change rgba 0.1 value to adjust facility card hover shadow transparency */
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-.facility-info {
-  flex: 1;
-  margin-right: 20px;
-}
-
-.facility-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 5px;
-}
-
-.facility-name {
-  font-size: 16px;
-  font-weight: bold;
-  color: #2c3e50;
-  margin: 0;
-}
-
-.facility-type {
-  background: #e8f4fd;
-  color: #1976d2;
-  padding: 2px 8px;
-  border-radius: 15px;
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.facility-details {
-  font-size: 12px;
-  color: #555;
-  line-height: 1.3;
-}
-
-.facility-address {
-  margin: 0 0 5px 0;
-}
-
-.facility-meta {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.facility-rating,
-.facility-distance {
-  font-size: 11px;
-  color: #666;
-}
-
-/* Action Buttons - Updated for vertical alignment */
-.facility-actions {
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: stretch;
-  min-width: 150px;
+  align-items: center;
 }
 
-.book-appointment-btn,
-.call-btn {
+.medicine-card:hover {
+  transform: translateY(-5px);
+  border-color: #0b6835;
+  box-shadow: 0 8px 20px rgba(11, 104, 53, 0.2);
+}
+
+.medicine-image-container {
+  width: 100%;
+  height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 16px;
-  font-size: 12px;
-  font-weight: bold;
+  margin-bottom: 12px;
   border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: Georgia, serif;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+
+.medicine-image {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.book-appointment-btn {
-  background: #0b6835;
-  color: white;
-}
-
-.book-appointment-btn:hover {
-  background: #088663;
-}
-
-.call-btn {
-  background: #0b6835;
-  color: white;
-  padding: 10px 12px;
-}
-
-.call-btn svg {
-  margin: 0;
-}
-
-.call-btn:hover {
-  background: #088663;
-}
-
-/* See More link - Updated to dark green */
-.see-more-container {
+.medicine-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0b6835, #0e7a42);
   display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.see-more-btn-healthcare {
-  background: #0b6835;
+  align-items: center;
+  justify-content: center;
   color: white;
-  border: none;
-  padding: 10px 25px;
-  border-radius: 20px;
-  font-size: 14px;
+  font-size: 48px;
   font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: Georgia, serif;
 }
 
-.see-more-btn-healthcare:hover {
-  background: #088663;
-  transform: translateY(-2px);
-  /* TRANSPARENCY: Change rgba 0.3 value to adjust see more button hover shadow transparency */
-  box-shadow: 0 4px 15px rgba(11, 104, 53, 0.3);
+.medicine-info {
+  width: 100%;
+  text-align: center;
 }
 
+.medicine-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.medicine-generic {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.medicine-rating {
+  font-size: 14px;
+  color: #ffa500;
+  font-weight: 600;
+}
+
+/* No Results */
 .no-results {
   text-align: center;
   padding: 40px;
@@ -710,9 +402,17 @@
 .no-results p {
   font-size: 14px;
   color: #888;
+  margin: 0;
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .medicines-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+}
+
 @media (max-width: 768px) {
   .new-section-wrapper {
     width: 95%;
@@ -732,11 +432,6 @@
     gap: 20px;
   }
 
-  .healthcare-types-grid {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
   .banners-container {
     height: 150px;
   }
@@ -746,29 +441,26 @@
     height: 110px;
   }
 
-  .lab-test-container {
-    height: 250px;
+  .medicines-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
-  .lab-test-slideshow {
-    height: 200px;
+  .medicine-image-container {
+    height: 120px;
   }
 
-  .facility-card {
-    flex-direction: column;
-    height: auto;
-    padding: 12px;
+  .medicine-name {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .medicines-grid {
+    grid-template-columns: 1fr;
   }
 
-  .facility-info {
-    margin-right: 0;
-    margin-bottom: 10px;
-    width: 100%;
-  }
-
-  .facility-actions {
-    width: 100%;
-    flex-direction: row;
-    justify-content: space-between;
+  .categories-grid.grid-view {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

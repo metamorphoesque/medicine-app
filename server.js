@@ -432,13 +432,13 @@ app.put("/api/seller/:sellerId/inventory/:itemId", async (req, res) => {
     let paramCount = 1;
 
     if (price !== undefined) {
-      updates.push(`price = $${paramCount}`);  // Fixed: Added $
+      updates.push(`price = $${paramCount}`);
       values.push(price);
       paramCount++;
     }
 
     if (stock !== undefined) {
-      updates.push(`stock = $${paramCount}`);  // Fixed: Added $
+      updates.push(`stock = $${paramCount}`);
       values.push(stock);
       paramCount++;
     }
@@ -801,6 +801,60 @@ app.get("/api/medicines/:id", async (req, res) => {
   }
 });
 
+// ---------------------- TOP DOCTORS & POPULAR MEDICINES ----------------------
+
+app.get("/api/medicines/top-doctors", async (req, res) => {
+  try {
+    const { limit = 8 } = req.query;
+    
+    const query = `
+      SELECT m.*, COALESCE(m.manufacturer_name, m.generic, 'Unknown') as manufacturer_name,
+             c.name as category_name, c.slug as category_slug
+      FROM medicines m
+      LEFT JOIN categories c ON m.category = c.id
+      WHERE m.doctor_rating IS NOT NULL AND m.doctor_rating > 0
+      ORDER BY m.doctor_rating DESC, m.name ASC
+      LIMIT $1
+    `;
+
+    const result = await pool.query(query, [parseInt(limit)]);
+    
+    res.json({ 
+      medicines: result.rows,
+      total: result.rows.length
+    });
+  } catch (err) {
+    console.error('Error fetching top doctors medicines:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/medicines/popular", async (req, res) => {
+  try {
+    const { limit = 8 } = req.query;
+    
+    const query = `
+      SELECT m.*, COALESCE(m.manufacturer_name, m.generic, 'Unknown') as manufacturer_name,
+             c.name as category_name, c.slug as category_slug
+      FROM medicines m
+      LEFT JOIN categories c ON m.category = c.id
+      WHERE m.patient_rating IS NOT NULL AND m.patient_rating > 0
+      ORDER BY m.patient_rating DESC, m.name ASC
+      LIMIT $1
+    `;
+
+    const result = await pool.query(query, [parseInt(limit)]);
+    
+    res.json({ 
+      medicines: result.rows,
+      total: result.rows.length
+    });
+  } catch (err) {
+    console.error('Error fetching popular medicines:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---------------------- SELLERS ----------------------
 app.post("/api/sellers", async (req, res) => {
   try {
@@ -876,12 +930,12 @@ app.get("/api/seller-medicines", async (req, res) => {
 
     if (seller_id) {
       params.push(seller_id);
-      query += ` AND sm.seller_id = $${params.length}`;  // Fixed: Added $
+      query += ` AND sm.seller_id = ${params.length}`;
     }
 
     if (medicine_id) {
       params.push(medicine_id);
-      query += ` AND sm.medicine_id = $${params.length}`;  // Fixed: Added $
+      query += ` AND sm.medicine_id = ${params.length}`;
     }
 
     query += ` ORDER BY sm.price ASC`;
@@ -1159,7 +1213,7 @@ app.get("/api/orders/seller/:sellerId", async (req, res) => {
 
     if (status) {
       params.push(status);
-      query += ` AND o.order_status = $${params.length}`;  // Fixed: Added $
+      query += ` AND o.order_status = ${params.length}`;
     }
 
     query += ` GROUP BY o.id, u.username, u.email ORDER BY o.created_at DESC`;
@@ -1474,20 +1528,20 @@ app.get("/api/healthcare/byState", async (req, res) => {
 
     if (state && state.trim() !== '') {
       params.push(state.trim());
-      query += ` AND LOWER(state) = LOWER($${params.length})`;  // Fixed: Added $
+      query += ` AND LOWER(state) = LOWER(${params.length})`;
     }
 
     if (pincode && pincode.trim() !== '') {
       params.push(pincode.trim());
-      query += ` AND pincode = $${params.length}`;  // Fixed: Added $
+      query += ` AND pincode = ${params.length}`;
     }
 
     if (type && type !== "all" && type.trim() !== '') {
       params.push(type.trim());
-      query += ` AND (LOWER(facility_type) = LOWER($${params.length}) OR LOWER(doctor_category) = LOWER($${params.length}))`;  // Fixed: Added $
+      query += ` AND (LOWER(facility_type) = LOWER(${params.length}) OR LOWER(doctor_category) = LOWER(${params.length}))`;
     }
 
-    query += ` ORDER BY rating DESC NULLS LAST, name ASC LIMIT $${params.length + 1}`;  // Fixed: Added $
+    query += ` ORDER BY rating DESC NULLS LAST, name ASC LIMIT ${params.length + 1}`;
     params.push(queryLimit);
 
     const result = await pool.query(query, params);
@@ -1515,43 +1569,6 @@ app.get("/api/healthcare/byState", async (req, res) => {
     });
   }
 });
-
-app.get("/api/healthcare/nearby", async (req, res) => {
-  try {
-    const { lat, lng, radius = 50, type } = req.query;
-    if (!lat || !lng) {
-      return res.status(400).json({ error: "Latitude and longitude are required" });
-    }
-
-    let query = `
-      SELECT *, 
-        (6371 * acos(
-          cos(radians($1)) * cos(radians(latitude)) * 
-          cos(radians(longitude) - radians($2)) + 
-          sin(radians($1)) * sin(radians(latitude))
-        )) AS distance_km
-      FROM healthcare_facilities
-      WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-    `;
-    const params = [parseFloat(lat), parseFloat(lng)];
-
-    if (type && type !== "all") {
-      query += ` AND (LOWER(facility_type) = LOWER($3) OR LOWER(doctor_category) = LOWER($3))`;
-      params.push(type);
-    }
-
-    query += ` HAVING distance_km <= ${params.length + 1} ORDER BY distance_km ASC LIMIT 50`;
-    params.push(parseFloat(radius));
-
-    const result = await pool.query(query, params);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Nearby healthcare error:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
 
 app.get("/api/healthcare/debug", async (req, res) => {
   try {
@@ -1665,67 +1682,67 @@ app.put("/api/user/profile/:userId", async (req, res) => {
     let paramCount = 1;
 
     if (fullName !== undefined) {
-      updates.push(`full_name = $${paramCount}`);  // Fixed: Added $ before ${paramCount}
+      updates.push(`full_name = ${paramCount}`);
       values.push(fullName);
       paramCount++;
     }
     
     if (gender !== undefined) {
-      updates.push(`gender = $${paramCount}`);  // Fixed
+      updates.push(`gender = ${paramCount}`);
       values.push(gender);
       paramCount++;
     }
     
     if (address !== undefined) {
-      updates.push(`address = $${paramCount}`);  // Fixed
+      updates.push(`address = ${paramCount}`);
       values.push(address);
       paramCount++;
     }
     
     if (phoneNumber !== undefined) {
-      updates.push(`phone_number = $${paramCount}`);  // Fixed
+      updates.push(`phone_number = ${paramCount}`);
       values.push(phoneNumber);
       paramCount++;
     }
     
     if (dateOfBirth !== undefined) {
-      updates.push(`date_of_birth = $${paramCount}`);  // Fixed
+      updates.push(`date_of_birth = ${paramCount}`);
       values.push(dateOfBirth);
       paramCount++;
     }
     
     if (pincode !== undefined) {
-      updates.push(`pincode = $${paramCount}`);  // Fixed
+      updates.push(`pincode = ${paramCount}`);
       values.push(pincode);
       paramCount++;
     }
     
     if (bloodGroup !== undefined) {
-      updates.push(`blood_group = $${paramCount}`);  // Fixed
+      updates.push(`blood_group = ${paramCount}`);
       values.push(bloodGroup);
       paramCount++;
     }
     
     if (conditions !== undefined) {
-      updates.push(`conditions = $${paramCount}`);  // Fixed
+      updates.push(`conditions = ${paramCount}`);
       values.push(conditions);
       paramCount++;
     }
     
     if (allergies !== undefined) {
-      updates.push(`allergies = $${paramCount}`);  // Fixed
+      updates.push(`allergies = ${paramCount}`);
       values.push(allergies);
       paramCount++;
     }
     
     if (medication !== undefined) {
-      updates.push(`medication = $${paramCount}`);  // Fixed
+      updates.push(`medication = ${paramCount}`);
       values.push(medication);
       paramCount++;
     }
     
     if (profileImage !== undefined) {
-      updates.push(`profile_image = $${paramCount}`);  // Fixed
+      updates.push(`profile_image = ${paramCount}`);
       values.push(profileImage);
       paramCount++;
     }
@@ -1740,7 +1757,7 @@ app.put("/api/user/profile/:userId", async (req, res) => {
     const query = `
       UPDATE users 
       SET ${updates.join(', ')} 
-      WHERE id = $${paramCount}   
+      WHERE id = ${paramCount}   
       RETURNING id, username, email, full_name, gender, address, phone_number, 
                 date_of_birth, pincode, blood_group, conditions, allergies, 
                 medication, profile_image, updated_at
@@ -1808,56 +1825,6 @@ app.post("/api/user/profile/:userId/image", async (req, res) => {
   }
 });
 
-// ---------------------- LAB TESTS ----------------------
-app.get("/api/lab-tests", async (req, res) => {
-  try {
-    const { category } = req.query;
-    
-    let query = `SELECT * FROM lab_tests WHERE 1=1`;
-    const params = [];
-    
-    if (category && category !== 'all') {
-      params.push(category);
-      query += ` AND category = $${params.length}`;  // Fixed: Added $
-    }
-    
-    query += ` ORDER BY name ASC`;
-    
-    const result = await pool.query(query, params);
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching lab tests:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-app.get("/api/lab-packages", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT lp.*, 
-             array_agg(
-               json_build_object(
-                 'id', lt.id,
-                 'name', lt.name,
-                 'description', lt.description,
-                 'price', lt.price
-               )
-             ) as included_tests
-      FROM lab_packages lp
-      LEFT JOIN lab_package_items lpi ON lp.id = lpi.package_id
-      LEFT JOIN lab_tests lt ON lpi.test_id = lt.id
-      GROUP BY lp.id, lp.name, lp.description, lp.price
-      ORDER BY lp.name
-    `);
-    
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error fetching lab packages:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // ---------------------- ROOT ----------------------
 app.get("/", (req, res) => {
   res.json({ 
@@ -1866,15 +1833,20 @@ app.get("/", (req, res) => {
     status: "healthy",
     endpoints: {
       auth: ["/api/register/buyer", "/api/register/seller", "/api/login"],
-      medicines: ["/api/medicines", "/api/medicines/:id", "/api/medicines/:id/similar"],
+      medicines: [
+        "/api/medicines", 
+        "/api/medicines/:id", 
+        "/api/medicines/:id/similar",
+        "/api/medicines/top-doctors",
+        "/api/medicines/popular"
+      ],
       categories: ["/api/categories", "/api/category-buttons"],
       sellers: ["/api/sellers", "/api/seller-medicines", "/api/seller/:sellerId/inventory"],
       cart: ["/api/cart", "/api/cart/:userId"],
       orders: ["/api/orders", "/api/orders/buyer/:buyerId", "/api/orders/seller/:sellerId"],
       prescriptions: ["/api/prescriptions", "/api/prescriptions/user/:userId"],
-      healthcare: ["/api/healthcare", "/api/healthcare/nearby", "/api/healthcare/byState"],
-      profile: ["/api/user/profile/:userId"],
-      labs: ["/api/lab-tests", "/api/lab-packages"]
+      healthcare: ["/api/healthcare/byState"],
+      profile: ["/api/user/profile/:userId"]
     }
   });
 });
